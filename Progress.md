@@ -2,15 +2,22 @@
 
 Running record of completed work on the Golf Swing App. Updated after every successfully completed task — newest entries at the top. See `docs/PRD.md` for the full spec and `docs/adr/` for architecture decisions.
 
+Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git log --format=%ai` (the commit that captured that work), not the actual time work started — later entries are timestamped live as the task completes.
+
 ---
 
-## 2026-08-02 — Reduce permission prompts
+## 2026-08-02 22:40 KST — Add timestamps to Progress.md entries
+
+- Backfilled existing entries with timestamps from `git log --format=%ai` for the commit that captured each piece of work.
+- Every entry going forward includes a timestamp, not just a date.
+
+## 2026-08-02 22:33 KST — Reduce permission prompts
 
 - Added `.claude/settings.json` with a `permissions.allow` allowlist for read-only, non-mutating commands: `pnpm run lint`, `pnpm run typecheck`, `pnpm run test`, `pnpm run doctor`, `pnpm run format` (exact matches only — deliberately not wildcarded, since `pnpm run *` would also allow mutating scripts like `format:write`).
 - Scanned available session transcripts for repeated Bash/MCP calls; found no other qualifying patterns — most commands were wrapped in a one-off PATH/fnm/rbenv activation preamble, which prevents subcommand-level allowlist rules from matching, and everything else that repeated (`git status`, `ls`, `cat`, `head`, `tail`, `wc`, `find`, `grep`, `git branch`) is already covered by Claude Code's built-in read-only auto-allow list.
 - Open item: activation preamble could be removed by adding `eval "$(fnm env --use-on-cd)"` and `eval "$(rbenv init -)"` to the shell profile (`~/.zshrc`) — not yet done, since that's outside the project directory.
 
-## 2026-08-02 — Commit and push Step 1 work to V1 branch
+## 2026-08-02 22:16 KST — Commit and push Step 1 work to V1 branch
 
 - Read the user-supplied `CLAUDE.md` (agent working agreement: validate before every commit, one logical task per commit, no unrequested pushes/force-pushes/history rewrites) and the complete `docs/PRD.md` (sections 1–23), which superseded the earlier truncated `docs/prd-draft.md` (removed; `README.md`/`SECURITY.md` updated to point at `docs/PRD.md`).
 - Created local branch `V1` off `main` (kept intentionally separate from `main` per instruction — no merging).
@@ -20,7 +27,7 @@ Running record of completed work on the Golf Swing App. Updated after every succ
   2. `b5d352f` — `CLAUDE.md` and complete `docs/PRD.md`.
 - Pushed `V1` to `origin/V1` (clean fast-forward, no force needed). `main` left untouched on both local and remote.
 
-## 2026-08-02 — Step 1: Development environment & tooling setup
+## 2026-08-02 22:16 KST — Step 1: Development environment & tooling setup
 
 Scoped deliberately to tooling/config only — no React Native app code yet.
 
@@ -53,4 +60,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Step 2: scaffold the actual React Native app (`apps/mobile`) — not yet started.
+Step 2 (in progress): scaffold the React Native app shell at `apps/mobile` — RN 0.81.6, navigation-only (Home/Record/History/Training/Settings placeholder screens), no camera/pose native modules yet. Plan approved; see `/Users/jadenjung/.claude/plans/tender-moseying-acorn.md`.
