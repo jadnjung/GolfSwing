@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+      "Bash(*)",
       "Bash(pnpm run lint)",
       "Bash(pnpm run typecheck)",
       "Bash(pnpm run test)",
