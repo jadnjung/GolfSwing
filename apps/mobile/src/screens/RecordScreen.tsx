@@ -1,10 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   Camera,
   useCameraDevice,
   type CameraPermissionStatus,
+  type VideoFile,
 } from 'react-native-vision-camera';
+import {
+  DocumentDirectoryPath,
+  mkdir,
+  moveFile,
+  writeFile,
+} from '@dr.pogodin/react-native-fs';
 import { colors, spacing } from '../theme/theme';
 import {
   useRecordingSetupStore,
@@ -17,6 +24,22 @@ import {
 const CLUBS: ClubType[] = ['driver', 'iron', 'wedge', 'putter'];
 const CAMERA_VIEWS: CameraViewOption[] = ['down-the-line', 'face-on'];
 const FRAME_RATES: FrameRate[] = [120, 60, 30];
+
+type CaptureStage =
+  'idle' | 'counting' | 'recording' | 'saving' | 'saved' | 'error';
+
+function createSwingId(): string {
+  // RFC4122-v4-shaped id without a crypto.randomUUID dependency — Hermes
+  // support for it can't be confirmed without a real device/build. Bitwise
+  // ops are the standard idiom for this, not a bug risk.
+  /* eslint-disable no-bitwise */
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, char => {
+    const random = (Math.random() * 16) | 0;
+    const value = char === 'x' ? random : (random & 0x3) | 0x8;
+    return value.toString(16);
+  });
+  /* eslint-enable no-bitwise */
+}
 
 function OptionRow<T extends string | number>({
   label,
@@ -64,12 +87,19 @@ export function RecordScreen() {
     useState<CameraPermissionStatus>(() =>
       Camera.getMicrophonePermissionStatus(),
     );
+  const [captureStage, setCaptureStage] = useState<CaptureStage>('idle');
+  const [countdownRemaining, setCountdownRemaining] = useState(0);
+  const [savedSwingId, setSavedSwingId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const cameraRef = useRef<Camera>(null);
 
   const {
     club,
     cameraView,
     cameraPosition,
     frameRate,
+    countdownSeconds,
     audioEnabled,
     setClub,
     setCameraView,
@@ -97,6 +127,79 @@ export function RecordScreen() {
   }, [audioEnabled, microphonePermission, requestMicrophoneAccess]);
 
   const hasCameraAccess = cameraPermission === 'granted';
+
+  const saveRecording = useCallback(
+    async (video: VideoFile) => {
+      setCaptureStage('saving');
+      try {
+        const swingId = createSwingId();
+        const swingDir = `${DocumentDirectoryPath}/swings/${swingId}`;
+        await mkdir(swingDir);
+        await moveFile(video.path, `${swingDir}/source.mp4`);
+
+        const manifest = {
+          id: swingId,
+          createdAt: new Date().toISOString(),
+          clubType: club,
+          cameraView,
+          cameraPosition,
+          frameRate,
+          durationMs: Math.round(video.duration * 1000),
+          analysisStatus: 'pending' as const,
+        };
+        await writeFile(
+          `${swingDir}/analysis-manifest.json`,
+          JSON.stringify(manifest, null, 2),
+        );
+
+        setSavedSwingId(swingId);
+        setCaptureStage('saved');
+      } catch (error) {
+        setErrorMessage(
+          error instanceof Error ? error.message : 'Failed to save recording.',
+        );
+        setCaptureStage('error');
+      }
+    },
+    [club, cameraView, cameraPosition, frameRate],
+  );
+
+  const startRecording = useCallback(() => {
+    setErrorMessage(null);
+    cameraRef.current?.startRecording({
+      onRecordingFinished: video => {
+        saveRecording(video);
+      },
+      onRecordingError: error => {
+        setErrorMessage(error.message);
+        setCaptureStage('error');
+      },
+    });
+    setCaptureStage('recording');
+  }, [saveRecording]);
+
+  const beginCountdown = useCallback(() => {
+    setSavedSwingId(null);
+    setErrorMessage(null);
+    setCountdownRemaining(countdownSeconds);
+    setCaptureStage('counting');
+  }, [countdownSeconds]);
+
+  useEffect(() => {
+    if (captureStage !== 'counting') {
+      return;
+    }
+    if (countdownRemaining <= 0) {
+      startRecording();
+      return;
+    }
+    const timeout = setTimeout(() => setCountdownRemaining(n => n - 1), 1000);
+    return () => clearTimeout(timeout);
+  }, [captureStage, countdownRemaining, startRecording]);
+
+  const stopRecording = useCallback(async () => {
+    await cameraRef.current?.stopRecording();
+  }, []);
 
   return (
     <ScrollView
@@ -126,15 +229,55 @@ export function RecordScreen() {
           this device.
         </Text>
       ) : (
-        <View style={styles.previewWrapper} testID="camera-preview-wrapper">
-          <Camera
-            style={StyleSheet.absoluteFill}
-            device={device}
-            isActive
-            video
-            audio={audioEnabled}
-          />
-        </View>
+        <>
+          <View style={styles.previewWrapper} testID="camera-preview-wrapper">
+            <Camera
+              ref={cameraRef}
+              style={StyleSheet.absoluteFill}
+              device={device}
+              isActive
+              video
+              audio={audioEnabled}
+            />
+            {captureStage === 'counting' ? (
+              <View style={styles.countdownOverlay} testID="countdown-overlay">
+                <Text style={styles.countdownText}>{countdownRemaining}</Text>
+              </View>
+            ) : null}
+          </View>
+
+          {captureStage === 'recording' ? (
+            <Pressable
+              style={styles.stopButton}
+              onPress={stopRecording}
+              testID="stop-button"
+            >
+              <Text style={styles.grantButtonText}>Stop</Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              style={styles.grantButton}
+              onPress={beginCountdown}
+              disabled={
+                captureStage === 'counting' || captureStage === 'saving'
+              }
+              testID="record-button"
+            >
+              <Text style={styles.grantButtonText}>
+                {captureStage === 'saving' ? 'Saving…' : 'Record'}
+              </Text>
+            </Pressable>
+          )}
+
+          {savedSwingId != null ? (
+            <Text style={styles.confirmationText} testID="save-confirmation">
+              Saved swing {savedSwingId}
+            </Text>
+          ) : null}
+          {errorMessage != null ? (
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          ) : null}
+        </>
       )}
 
       <OptionRow
@@ -222,11 +365,36 @@ const styles = StyleSheet.create({
     color: colors.background,
     fontWeight: '600',
   },
+  stopButton: {
+    backgroundColor: '#D14343',
+    paddingVertical: spacing.sm,
+    borderRadius: 6,
+    alignItems: 'center',
+  },
   previewWrapper: {
     height: 240,
     borderRadius: 8,
     overflow: 'hidden',
     backgroundColor: colors.surface,
+  },
+  countdownOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(11, 15, 20, 0.6)',
+  },
+  countdownText: {
+    color: colors.text,
+    fontSize: 48,
+    fontWeight: '700',
+  },
+  confirmationText: {
+    color: colors.primary,
+    fontSize: 13,
+  },
+  errorText: {
+    color: '#D14343',
+    fontSize: 13,
   },
   row: {
     flexDirection: 'row',

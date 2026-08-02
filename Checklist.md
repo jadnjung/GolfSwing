@@ -10,7 +10,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 ## Foundational / DevOps (prerequisite infrastructure, not a PRD roadmap phase)
 
-- [x] Monorepo scaffold, version-pinned toolchain, ADR process (`docs/adr/0001`–`0004`)
+- [x] Monorepo scaffold, version-pinned toolchain, ADR process (`docs/adr/0001`–`0005`)
 - [x] TypeScript strict config, ESLint, Prettier, EditorConfig
 - [x] CI pipeline: lint, format, typecheck, test, dependency audit, secret scan (`.github/workflows/pr-checks.yml`)
 - [x] Local machine provisioned and verified (`scripts/doctor.sh`)
@@ -42,7 +42,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 - [x] Permission flows (camera + microphone, via `react-native-vision-camera`'s permission API — not build-verified, see below)
 - [x] Recording setup screen (club/view/camera/frame-rate/audio selectors + live camera preview once permission is granted — not build-verified)
 - [x] Front/rear camera selection (dual explicitly not offered — needs a real device to check concurrent-camera capability)
-- [ ] Local video storage
+- [x] Local video storage (countdown → record → save to `<DocumentDirectoryPath>/swings/<id>/source.mp4` + `analysis-manifest.json`, via `@dr.pogodin/react-native-fs` — not build-verified, see below)
 - [ ] Replay
 - [ ] History
 - [ ] Crash handling
@@ -103,19 +103,19 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 ## MVP scope tracker (PRD 3.1 — the 24-item list, cross-cutting across phases above)
 
 1. [ ] Local user profile
-2. [ ] Front- or rear-camera selection
-3. [ ] Rear-camera default
+2. [x] Front- or rear-camera selection
+3. [x] Rear-camera default
 4. [ ] Landscape recording mode
-5. [ ] 30/60 FPS recording where supported
-6. [ ] Video countdown timer
-7. [ ] Manual recording start/stop
+5. [ ] 30/60 FPS recording where supported (selector exists in UI; not yet wired to an actual device format/fps)
+6. [x] Video countdown timer
+7. [x] Manual recording start/stop
 8. [ ] Automatic swing-event detection where reliable
 9. [ ] On-device human-pose detection
 10. [ ] Pose skeleton overlay
 11. [ ] Joint-angle calculations
 12. [ ] Basic golf swing phase detection
 13. [ ] Post-swing feedback
-14. [ ] Local swing storage
+14. [x] Local swing storage
 15. [ ] Swing-history screen
 16. [ ] Video replay
 17. [ ] Slow-motion playback

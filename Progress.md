@@ -6,6 +6,31 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 01:55 KST — Step 4: Actual recording capture (countdown, start/stop, local file save)
+
+Scoped deliberately to just recording + local file save — no SQLite/`packages/local-database`, History screen, or Replay yet, since those need something to list/play back, which only exists after this step.
+
+**New dependency decision:** needed real filesystem access to move vision-camera's temporary recording output into stable local storage. Checked npm: the original `react-native-fs` hasn't published since **May 2022** (4+ years stale — too risky to trust against RN 0.81.6's New Architecture). `@dr.pogodin/react-native-fs` is an actively maintained fork of the same API, latest release **2026-07-03**. Same reasoning as ADRs 0003/0004: proven API, actively maintained fork over the abandoned original. Recorded in `docs/adr/0005-filesystem-library.md`. Storage root: `RNFS.DocumentDirectoryPath` (private by default on both platforms, not exposed via Files app/external storage unless the app opts in).
+
+**Bug caught before it shipped:** `@dr.pogodin/react-native-fs` has **no default export**, only named exports (`mkdir`, `moveFile`, `writeFile`, `DocumentDirectoryPath`, etc.) — confirmed by reading its actual built output, not assumed from habit. My first draft used `import RNFS from '@dr.pogodin/react-native-fs'`, which would have been `undefined` at runtime. Fixed to named imports before it ever ran.
+
+**Built:** `RecordScreen.tsx` now has a real capture state machine (`idle → counting → recording → saving → saved/error`): pressing "Record" starts a countdown using the selected `countdownSeconds` (3 or 10), then calls `camera.current.startRecording()` via a new camera `ref`; "Stop" calls `stopRecording()`. On `onRecordingFinished`, creates `<DocumentDirectoryPath>/swings/<uuid>/`, moves the video in as `source.mp4`, and writes `analysis-manifest.json` with only the fields we can actually populate today (id, createdAt, club/view/camera/frameRate, durationMs, `analysisStatus: 'pending'`) — no fake placeholders for fields that don't exist yet (pose data, metrics). A brief on-screen confirmation shows the saved swing id.
+
+**Testing:** extended the vision-camera Jest mock with `useImperativeHandle`-exposed `startRecording`/`stopRecording` (they're instance methods called via ref, not statics), and added a manual mock for `@dr.pogodin/react-native-fs`. Two new tests drive real state transitions with fake timers: countdown → recording → save (asserting `mkdir`/`moveFile`/`writeFile` were called with the expected paths/content, not just "didn't crash"), and Stop actually calling `stopRecording`.
+
+**Bugs found while writing the test, both fixed:**
+
+- `jest.advanceTimersByTime(3000)` in one call didn't fire all three countdown ticks — each tick reschedules its own `setTimeout` from a `useEffect`, so React needs to flush a render between each one. Fixed by advancing 1000ms at a time across three separate `act()` calls.
+- Two `no-bitwise`/`no-void` ESLint warnings from the UUID generator and a fire-and-forget async call — addressed directly (a scoped `eslint-disable` for the standard bitwise UUID idiom; removed the unnecessary `void` since nothing required suppressing the floating promise here).
+
+**Full workspace validation passed:** `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm doctor` — all green.
+
+**Known open items:**
+
+- Still not build-verified on a real device/simulator — no Xcode/Android Studio in this environment.
+- Frame rate is a UI selector only, not yet wired to an actual `useCameraFormat`/device capability query.
+- No SQLite/local-database repository, History screen, or Replay yet — next step.
+
 ## 2026-08-03 01:38 KST — Step 3: Camera capture screen (react-native-vision-camera) + permission flow
 
 Per your direction, this step decided the camera capture library and installed it, rather than deferring that decision.
@@ -124,4 +149,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Step 4 (not started): actual video recording/saving, local video storage, and swing-history/replay (PRD "Phase 1: Recording Foundation" remaining items: local video storage, replay, history, crash handling). Real device/build verification for everything camera-related is still blocked on Xcode/Android Studio being installed.
+Step 5 (not started): a queryable local swing repository (SQLite, `packages/local-database`) plus a History screen listing saved swings, and Replay (PRD "Phase 1: Recording Foundation" remaining items: history, replay, crash handling). Real device/build verification for everything camera-related is still blocked on Xcode/Android Studio being installed.

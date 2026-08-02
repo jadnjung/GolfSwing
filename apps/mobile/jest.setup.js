@@ -21,21 +21,47 @@ jest.mock('react-native-vision-camera', () => {
   const React = require('react');
   const { View } = require('react-native');
 
-  const MockCamera = React.forwardRef((props, ref) =>
-    React.createElement(View, {
+  // startRecording/stopRecording are instance methods called via a ref
+  // (camera.current.startRecording(...)), not statics on Camera itself, so
+  // they're exposed through useImperativeHandle — and also attached directly
+  // to MockCamera so tests can configure/assert them without needing a live
+  // ref instance.
+  const mockStartRecording = jest.fn();
+  const mockStopRecording = jest.fn(async () => {});
+
+  const MockCamera = React.forwardRef((props, ref) => {
+    React.useImperativeHandle(ref, () => ({
+      startRecording: mockStartRecording,
+      stopRecording: mockStopRecording,
+      pauseRecording: jest.fn(async () => {}),
+      resumeRecording: jest.fn(async () => {}),
+      cancelRecording: jest.fn(async () => {}),
+    }));
+    return React.createElement(View, {
       ...props,
-      ref,
       testID: props.testID ?? 'mock-camera',
-    }),
-  );
+    });
+  });
   MockCamera.displayName = 'Camera';
   MockCamera.getCameraPermissionStatus = jest.fn(() => 'not-determined');
   MockCamera.getMicrophonePermissionStatus = jest.fn(() => 'not-determined');
   MockCamera.requestCameraPermission = jest.fn(async () => 'denied');
   MockCamera.requestMicrophonePermission = jest.fn(async () => 'denied');
+  MockCamera.mockStartRecording = mockStartRecording;
+  MockCamera.mockStopRecording = mockStopRecording;
 
   return {
     Camera: MockCamera,
     useCameraDevice: jest.fn(() => undefined),
   };
 });
+
+// @dr.pogodin/react-native-fs is entirely native-backed; mock just the
+// functions RecordScreen actually calls. Resolve successfully by default —
+// tests override per-case for failure scenarios.
+jest.mock('@dr.pogodin/react-native-fs', () => ({
+  DocumentDirectoryPath: '/mock/documents',
+  mkdir: jest.fn(async () => {}),
+  moveFile: jest.fn(async () => {}),
+  writeFile: jest.fn(async () => {}),
+}));
