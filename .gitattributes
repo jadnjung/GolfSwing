@@ -1,0 +1,11 @@
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.mp4 binary
+*.mov binary
+*.tflite binary -diff
+*.mlmodel binary -diff
+*.mlpackage binary -diff
+*.bin binary -diff
