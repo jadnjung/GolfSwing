@@ -4,9 +4,19 @@ An on-device golf swing analysis mobile app (React Native + native Swift/Kotlin 
 
 Full spec: [`docs/PRD.md`](docs/PRD.md).
 
+## Start here (new to this project?)
+
+Read these in order:
+
+1. **[`CLAUDE.md`](CLAUDE.md)** — working agreement for AI-assisted development in this repo (git workflow, coding standards, validation requirements). Read this before making any change.
+2. **[`docs/PRD.md`](docs/PRD.md)** — the full product/architecture/DevOps spec. Everything else in this repo traces back to it.
+3. **[`Checklist.md`](Checklist.md)** — status at a glance: what's done, in progress, and not started, structured after the PRD's delivery roadmap. Read this to see where the project stands _right now_.
+4. **[`Progress.md`](Progress.md)** — chronological log of completed work, newest first, with the _why_ behind each decision. Read this to understand how we got here, not just where we are.
+5. **[`docs/adr/`](docs/adr/)** — Architecture Decision Records for specific technical choices (toolchain versions, React Native version, etc.) and the reasoning behind them.
+
 ## Status
 
-Tooling/environment setup only. No app code yet — see `docs/adr/` for the decisions made so far and what's next.
+See `Checklist.md` for current status. As of this writing: tooling/environment setup is done; the React Native app shell is in progress.
 
 ## Prerequisites
 
