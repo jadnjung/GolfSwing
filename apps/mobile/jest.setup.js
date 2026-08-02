@@ -12,3 +12,30 @@ jest.mock(
     // not the object itself, which would make every named import undefined.
     require('react-native-safe-area-context/jest/mock').default,
 );
+
+// react-native-vision-camera ships no Jest mock for either 4.x or 5.x — its
+// Camera component and permission checks are backed entirely by native code.
+// Mock just the surface RecordScreen actually uses; tests override the
+// jest.fn() return values per-case (not-determined -> request -> granted).
+jest.mock('react-native-vision-camera', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  const MockCamera = React.forwardRef((props, ref) =>
+    React.createElement(View, {
+      ...props,
+      ref,
+      testID: props.testID ?? 'mock-camera',
+    }),
+  );
+  MockCamera.displayName = 'Camera';
+  MockCamera.getCameraPermissionStatus = jest.fn(() => 'not-determined');
+  MockCamera.getMicrophonePermissionStatus = jest.fn(() => 'not-determined');
+  MockCamera.requestCameraPermission = jest.fn(async () => 'denied');
+  MockCamera.requestMicrophonePermission = jest.fn(async () => 'denied');
+
+  return {
+    Camera: MockCamera,
+    useCameraDevice: jest.fn(() => undefined),
+  };
+});

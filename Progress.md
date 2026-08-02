@@ -6,6 +6,32 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 01:38 KST — Step 3: Camera capture screen (react-native-vision-camera) + permission flow
+
+Per your direction, this step decided the camera capture library and installed it, rather than deferring that decision.
+
+**Library decision:** Checked npm for the realistic paths. `react-native-vision-camera` `@latest` is 5.2.1 — a Nitro-Modules-based rewrite (mandatory `react-native-nitro-modules`/`react-native-nitro-image` peers) with a much larger, newer API surface (sessions, output configs, gesture controllers) and far less community track record. The 4.x line (latest 4.7.3, 29 releases since 4.0.0) uses the classic, extensively documented API, and its advanced-feature peers (`react-native-reanimated`, `@shopify/react-native-skia`, `react-native-worklets-core`) are all **optional** — not needed for plain photo/video capture. Same reasoning as ADR 0003 (RN 0.81.6 over `@latest`): picked the more proven, narrower-risk option, especially since neither is compile-verifiable in this environment. **Decision: `react-native-vision-camera` 4.7.3**, recorded in `docs/adr/0004-camera-capture-library.md`. `native/ios-swing-capture` and `native/android-swing-capture` READMEs updated — their purpose is now future custom frame-processor _plugins_ (e.g. the pose-inference bridge, Phase 2), not full camera capture reimplementation, since vision-camera already provides that.
+
+**Built:**
+
+- `RecordScreen.tsx` replaced (placeholder → real UI): permission gate showing live status via `Camera.getCameraPermissionStatus()`/`getMicrophonePermissionStatus()`, a real "Grant camera access" button calling `Camera.requestCameraPermission()`, and — once granted and a device is available — an actual `<Camera>` preview component, not a placeholder. Club/camera-view/frame-rate selectors and an audio toggle (PRD section 10.3). Front/rear selection via `useCameraDevice()`; dual camera deliberately not offered (PRD CAM-003/CAM-004 — concurrent-capture capability can only be checked on a real device).
+- `recordingSetupStore.ts`: a real Zustand store (club/view/camera-position/frameRate/countdown/audio), same bar as `uiStore`.
+- `Info.plist` (`NSCameraUsageDescription`, `NSMicrophoneUsageDescription`) and `AndroidManifest.xml` (`CAMERA`, `RECORD_AUDIO` permissions) — plain config, inspectable but not build-verified.
+- A manual Jest mock for `react-native-vision-camera` in `jest.setup.js` (the library ships none for either version) covering the static permission methods and the `Camera`/`useCameraDevice` surface actually used, plus a real test (`RecordScreen.test.tsx`) driving an actual state transition — not-determined → request → granted → preview appears — rather than a render-without-crashing smoke test.
+
+**Bugs found while writing the test, both fixed:**
+
+- A generic function (`OptionRow<T extends string | number>`) in a `.tsx` file is ambiguous with JSX to some parsers — fixed with the standard trailing-comma disambiguation (`<T extends string | number,>`).
+- `findAllByProps({ testID })` matches both the composite element and its underlying host node when the prop passes through unchanged, returning 2 matches for one visually-present element, not 1 — switched assertions to presence/absence (`.length > 0`) instead of an exact count.
+
+**Full workspace validation passed:** `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm doctor` — all green.
+
+**Known open items:**
+
+- The vision-camera integration itself is **not build-verified** — still no Xcode/Android Studio in this environment; first real verification happens on an actual device/simulator once those are installed.
+- Actually recording/saving video, the countdown timer, swing-event auto-detection, and frame processors (needed for Phase 2 pose inference) are still not implemented.
+- Front/rear capability detection and frame-rate/format availability are shown as static options, not filtered by actual device capability (needs a live device to query).
+
 ## 2026-08-03 00:50 KST — Broaden Bash permission allowlist
 
 - Added `Bash(*)` to `.claude/settings.json` per explicit request, so routine commands stop prompting for approval during active development. Kept the earlier exact-match `pnpm run *` rules alongside it (harmless overlap). Continuing to exercise independent judgment to keep actions scoped to this repo and avoid destructive operations, since permission patterns can't enforce a filesystem boundary themselves.
@@ -98,4 +124,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Step 3 (not started): native camera capture modules (`native/ios-swing-capture`, `native/android-swing-capture`) and permission flows — PRD "Phase 1: Recording Foundation". Blocked on Xcode/Android Studio being installed for any real device/build verification.
+Step 4 (not started): actual video recording/saving, local video storage, and swing-history/replay (PRD "Phase 1: Recording Foundation" remaining items: local video storage, replay, history, crash handling). Real device/build verification for everything camera-related is still blocked on Xcode/Android Studio being installed.

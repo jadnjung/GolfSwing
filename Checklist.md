@@ -10,7 +10,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 ## Foundational / DevOps (prerequisite infrastructure, not a PRD roadmap phase)
 
-- [x] Monorepo scaffold, version-pinned toolchain, ADR process (`docs/adr/0001`–`0003`)
+- [x] Monorepo scaffold, version-pinned toolchain, ADR process (`docs/adr/0001`–`0004`)
 - [x] TypeScript strict config, ESLint, Prettier, EditorConfig
 - [x] CI pipeline: lint, format, typecheck, test, dependency audit, secret scan (`.github/workflows/pr-checks.yml`)
 - [x] Local machine provisioned and verified (`scripts/doctor.sh`)
@@ -38,10 +38,10 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 ## Phase 1: Recording Foundation (PRD 16)
 
 - [x] React Native shell (`apps/mobile`, RN 0.81.6 — navigation + placeholder screens only, no camera/pose logic)
-- [ ] Native camera modules (`native/ios-swing-capture`, `native/android-swing-capture`)
-- [ ] Permission flows
-- [ ] Recording setup screen
-- [ ] Front/rear camera selection
+- [ ] Native camera modules (`native/ios-swing-capture`, `native/android-swing-capture` — repurposed to future frame-processor plugins per `docs/adr/0004`; base capture is `react-native-vision-camera` instead, not hand-written)
+- [x] Permission flows (camera + microphone, via `react-native-vision-camera`'s permission API — not build-verified, see below)
+- [x] Recording setup screen (club/view/camera/frame-rate/audio selectors + live camera preview once permission is granted — not build-verified)
+- [x] Front/rear camera selection (dual explicitly not offered — needs a real device to check concurrent-camera capability)
 - [ ] Local video storage
 - [ ] Replay
 - [ ] History
