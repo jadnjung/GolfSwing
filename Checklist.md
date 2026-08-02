@@ -10,7 +10,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 ## Foundational / DevOps (prerequisite infrastructure, not a PRD roadmap phase)
 
-- [x] Monorepo scaffold, version-pinned toolchain, ADR process (`docs/adr/0001`, `0002`)
+- [x] Monorepo scaffold, version-pinned toolchain, ADR process (`docs/adr/0001`–`0003`)
 - [x] TypeScript strict config, ESLint, Prettier, EditorConfig
 - [x] CI pipeline: lint, format, typecheck, test, dependency audit, secret scan (`.github/workflows/pr-checks.yml`)
 - [x] Local machine provisioned and verified (`scripts/doctor.sh`)
@@ -37,7 +37,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 ## Phase 1: Recording Foundation (PRD 16)
 
-- [ ] React Native shell — in progress (Step 2, this session)
+- [x] React Native shell (`apps/mobile`, RN 0.81.6 — navigation + placeholder screens only, no camera/pose logic)
 - [ ] Native camera modules (`native/ios-swing-capture`, `native/android-swing-capture`)
 - [ ] Permission flows
 - [ ] Recording setup screen

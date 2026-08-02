@@ -12,6 +12,11 @@ export default tseslint.config(
       "**/android/**",
       "**/.expo/**",
       "**/coverage/**",
+      // apps/mobile has its own ESLint 8 + @react-native/eslint-config
+      // (legacy .eslintrc.js format, React Native-specific rules) — linted
+      // via its own `pnpm --filter @golf-swing/mobile run lint`, not this
+      // flat config.
+      "apps/mobile/**",
     ],
   },
   js.configs.recommended,

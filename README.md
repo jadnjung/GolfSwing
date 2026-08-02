@@ -16,7 +16,7 @@ Read these in order:
 
 ## Status
 
-See `Checklist.md` for current status. As of this writing: tooling/environment setup is done; the React Native app shell is in progress.
+See `Checklist.md` for current status. As of this writing: tooling/environment setup is done; the React Native app shell (`apps/mobile`, navigation only, no camera/pose yet) is done. Native iOS/Android builds are not yet verified — that needs Xcode/Android Studio installed (see Prerequisites).
 
 ## Prerequisites
 
@@ -46,12 +46,22 @@ pnpm test
 ## Repository layout
 
 ```
-apps/            deployable apps (React Native app to be scaffolded)
+apps/mobile/     React Native app (0.81.6) — navigation shell only, no camera/pose yet
 packages/        shared TypeScript packages (domain, analysis-engine, feedback-rules, ...)
-native/          native iOS/Android camera + ML inference modules
-models/          on-device ML model assets and manifests
+native/          native iOS/Android camera + ML inference modules (not started)
+models/          on-device ML model assets and manifests (not started)
 scripts/         automation scripts (doctor.sh, etc.)
 docs/            architecture, ADRs, privacy, release, QA docs
 ```
 
-See `docs/adr/0002-toolchain-baseline.md` for why specific versions were chosen.
+See `docs/adr/0002-toolchain-baseline.md` for the toolchain decisions and `docs/adr/0003-react-native-version.md` for why React Native 0.81.6 specifically.
+
+## Working on `apps/mobile`
+
+```bash
+pnpm --filter @golf-swing/mobile run typecheck
+pnpm --filter @golf-swing/mobile run lint
+pnpm --filter @golf-swing/mobile run test
+```
+
+Native builds (`pnpm --filter @golf-swing/mobile run ios` / `run android`) require Xcode / Android Studio to be installed first — not yet verified in this environment.

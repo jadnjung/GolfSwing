@@ -6,9 +6,47 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
-## 2026-08-02 22:40 KST — Add timestamps to Progress.md entries
+## 2026-08-03 00:50 KST — Broaden Bash permission allowlist
 
-- Backfilled existing entries with timestamps from `git log --format=%ai` for the commit that captured each piece of work.
+- Added `Bash(*)` to `.claude/settings.json` per explicit request, so routine commands stop prompting for approval during active development. Kept the earlier exact-match `pnpm run *` rules alongside it (harmless overlap). Continuing to exercise independent judgment to keep actions scoped to this repo and avoid destructive operations, since permission patterns can't enforce a filesystem boundary themselves.
+
+## 2026-08-03 01:04 KST — Step 2: React Native app shell (`apps/mobile`)
+
+Scoped to shell only, per plan: navigation + placeholder screens, no camera/pose/native modules yet (those are a later step).
+
+**Version decision:** Checked the live npm registry — latest stable React Native is 0.86.2, but `react-native-reanimated` 4.x (needed later for overlay/timeline UI) requires RN 0.83–0.86 specifically, while reanimated 3.x has no such constraint. Pinned **React Native 0.81.6** instead of `@latest` to avoid locking in that narrow range before it's needed. Recorded in `docs/adr/0003-react-native-version.md`; `docs/adr/0002-toolchain-baseline.md` and `docs/architecture/toolchain.md` updated to point at it instead of staying `PENDING`. Also resolved Android `compileSdk`/`targetSdk` 36, `minSdk` 24 from RN 0.81.6's own gradle version catalog.
+
+**Generated** via the official `@react-native-community/cli init` (not hand-rolled) targeting `react-native@0.81.6` / `@react-native-community/template@0.81.6` explicitly, into `apps/mobile`, with `--skip-install` and `--skip-git-init` (root pnpm/git manage this instead).
+
+**Wired into the monorepo** — several real, non-obvious fixes along the way, not just config boilerplate:
+
+- `apps/mobile/package.json` renamed to `@golf-swing/mobile`, `typecheck` script added.
+- `tsconfig.json` extends both `@react-native/typescript-config` and the root `tsconfig.base.json` (TS 5's multi-extends), with `forceConsistentCasingInFileNames` explicitly re-overridden to `false` — RN's config deliberately disables it ("causes issues with package.json exports") and our stricter base would have silently re-enabled it.
+- `metro.config.js` made monorepo-aware: `watchFolders` includes the workspace root, `resolver.nodeModulesPaths` covers both local and root `node_modules`, `unstable_enableSymlinks: true` for pnpm's symlinked structure.
+- **Bug found:** ESLint 8.57 (used by RN's template) auto-detects `eslint.config.js`/`.mjs` by searching _upward_ through parent directories — it found the root's flat config, applied its ignores (which include `apps/mobile/**`), and concluded there was nothing to lint. Fixed by forcing legacy config resolution for this package specifically: `ESLINT_USE_FLAT_CONFIG=false eslint .`. Root `eslint.config.mjs` now explicitly ignores `apps/mobile/**` (it lints itself, independently), and root `package.json`'s `lint` script runs both the root flat-config lint and `pnpm -r --if-present run lint` so per-package lint scripts (like this one) actually execute.
+- **Bug found:** RN's default Jest `transformIgnorePatterns` assumes packages live directly under one `node_modules/` — pnpm nests them as `node_modules/.pnpm/<pkg>@<version>/node_modules/<pkg>/`, so the default pattern silently skipped transforming `react-native` and `@react-navigation/*`, causing `SyntaxError: Cannot use import statement outside a module`. Fixed with a corrected pattern in `apps/mobile/jest.config.js` that accounts for the optional pnpm nesting before checking package names.
+- **Bug found:** `react-native-safe-area-context`'s `SafeAreaProvider` needs real layout measurement to resolve insets, which never happens under `react-test-renderer` — it rendered its children as permanently `null`. Fixed via the library's own documented Jest mock (`jest.setup.js`), correcting one further wrinkle: the mock file uses `export default {...}`, so a plain `require()` of the Babel-compiled output returns `{ default: {...} }`, not the object itself — had to unwrap `.default` explicitly or every named import resolved to `undefined`.
+- Same Watchman-hang issue as `packages/tooling-smoke-test` (see 2026-08-02 entry below) reproduced here too; fixed the same way (`watchman: false` in Jest config).
+- Deliberately did **not** call `react-native-screens`' `enableScreens()` yet — it's a required peer of `@react-navigation/bottom-tabs` (installed, available for native builds) but has no Jest-safe mock for this version, and turned out to be unnecessary for a shell-only step.
+
+**Source layout** reorganized into the PRD's documented structure: `src/{app,components,features,navigation,screens,state,theme}`. Added `@react-navigation/native` + `bottom-tabs` (5-tab layout: Home/Record/History/Training/Settings, PRD section 10.1) and Zustand with one real store (`useUiStore`, tracking the active tab) — proven genuinely wired via `ActiveTabBanner`, a component every screen renders that reads the store reactively, plus a real test (`__tests__/App.test.tsx`) asserting the rendered text actually reflects it, not just that something rendered without crashing.
+
+**Full workspace validation passed:** `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm doctor` — all green, across all three workspace packages.
+
+**Known open items:**
+
+- iOS/Android native builds are **not verified** in this environment — needs Xcode ≥ 16.1 and Android Studio/JDK 17 installed first (both still manual, flagged since Step 1).
+- No camera capture, pose inference, or native Swift/Kotlin modules yet — separate, larger step.
+- `react-native-screens`' `enableScreens()` deferred until native builds can actually be tested.
+
+## 2026-08-02 22:45 KST — Add onboarding pointers to README
+
+- README now tells a new contributor exactly what to read and in what order: `CLAUDE.md` (working agreement), `docs/PRD.md` (spec), `Checklist.md` (status at a glance), `Progress.md` (chronological log with reasoning), `docs/adr/` (specific technical decisions).
+
+## 2026-08-02 22:43 KST — Add Checklist.md and timestamp Progress.md entries
+
+- Added `Checklist.md`: a status-at-a-glance view (done/in-progress/not-started) structured after the PRD's delivery roadmap (section 16) and MVP scope (section 3.1), so a new contributor can see where the project stands without reading `Progress.md`'s full narrative. Distinct purpose from this log — check an item only when it's actually done and validated, not when work has merely started.
+- Backfilled existing `Progress.md` entries with timestamps from `git log --format=%ai` for the commit that captured each piece of work.
 - Every entry going forward includes a timestamp, not just a date.
 
 ## 2026-08-02 22:33 KST — Reduce permission prompts
@@ -60,4 +98,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Step 2 (in progress): scaffold the React Native app shell at `apps/mobile` — RN 0.81.6, navigation-only (Home/Record/History/Training/Settings placeholder screens), no camera/pose native modules yet. Plan approved; see `/Users/jadenjung/.claude/plans/tender-moseying-acorn.md`.
+Step 3 (not started): native camera capture modules (`native/ios-swing-capture`, `native/android-swing-capture`) and permission flows — PRD "Phase 1: Recording Foundation". Blocked on Xcode/Android Studio being installed for any real device/build verification.

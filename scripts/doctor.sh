@@ -81,7 +81,7 @@ fi
 
 # Java
 if command -v java >/dev/null 2>&1; then
-  info "Java: $(java -version 2>&1 | head -n1) — no app exists yet to validate the required JDK 17 against"
+  info "Java: $(java -version 2>&1 | head -n1) — apps/mobile requires JDK 17 for Android Gradle builds; this is whatever's on PATH, not necessarily what Gradle will actually use (Android Studio installs its own)"
 else
   missing "Java not found"
 fi
