@@ -1,0 +1,79 @@
+import { readDir, readFile } from '@dr.pogodin/react-native-fs';
+import { listSwings } from './swingRepository';
+
+const mockedReadDir = readDir as jest.Mock;
+const mockedReadFile = readFile as jest.Mock;
+
+function dirEntry(path: string) {
+  return {
+    path,
+    name: path.split('/').pop() ?? path,
+    size: 0,
+    mtime: null,
+    ctime: null,
+    isDirectory: () => true,
+    isFile: () => false,
+  };
+}
+
+function fileEntry(path: string) {
+  return { ...dirEntry(path), isDirectory: () => false, isFile: () => true };
+}
+
+const olderManifest = {
+  id: 'swing-older',
+  createdAt: '2026-08-01T00:00:00.000Z',
+  clubType: 'iron',
+  cameraView: 'down-the-line',
+  cameraPosition: 'back',
+  frameRate: 30,
+  durationMs: 3000,
+  analysisStatus: 'pending',
+};
+
+const newerManifest = {
+  id: 'swing-newer',
+  createdAt: '2026-08-02T00:00:00.000Z',
+  clubType: 'driver',
+  cameraView: 'face-on',
+  cameraPosition: 'front',
+  frameRate: 60,
+  durationMs: 4000,
+  analysisStatus: 'pending',
+};
+
+describe('listSwings', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns an empty list when the swings directory does not exist yet', async () => {
+    mockedReadDir.mockRejectedValue(new Error('ENOENT'));
+    await expect(listSwings()).resolves.toEqual([]);
+  });
+
+  it('skips non-directory entries and directories with a corrupt manifest, sorted newest first', async () => {
+    mockedReadDir.mockResolvedValue([
+      dirEntry('/mock/documents/swings/swing-older'),
+      dirEntry('/mock/documents/swings/swing-newer'),
+      dirEntry('/mock/documents/swings/swing-corrupt'),
+      fileEntry('/mock/documents/swings/.DS_Store'),
+    ]);
+    mockedReadFile.mockImplementation(async (path: string) => {
+      if (path.includes('swing-older')) return JSON.stringify(olderManifest);
+      if (path.includes('swing-newer')) return JSON.stringify(newerManifest);
+      if (path.includes('swing-corrupt')) return 'not valid json{{{';
+      throw new Error(`unexpected read: ${path}`);
+    });
+
+    const swings = await listSwings();
+
+    expect(swings.map(swing => swing.id)).toEqual([
+      'swing-newer',
+      'swing-older',
+    ]);
+    expect(mockedReadFile).not.toHaveBeenCalledWith(
+      expect.stringContaining('.DS_Store'),
+    );
+  });
+});

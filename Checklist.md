@@ -10,7 +10,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 ## Foundational / DevOps (prerequisite infrastructure, not a PRD roadmap phase)
 
-- [x] Monorepo scaffold, version-pinned toolchain, ADR process (`docs/adr/0001`–`0005`)
+- [x] Monorepo scaffold, version-pinned toolchain, ADR process (`docs/adr/0001`–`0006`)
 - [x] TypeScript strict config, ESLint, Prettier, EditorConfig
 - [x] CI pipeline: lint, format, typecheck, test, dependency audit, secret scan (`.github/workflows/pr-checks.yml`)
 - [x] Local machine provisioned and verified (`scripts/doctor.sh`)
@@ -43,8 +43,8 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 - [x] Recording setup screen (club/view/camera/frame-rate/audio selectors + live camera preview once permission is granted — not build-verified)
 - [x] Front/rear camera selection (dual explicitly not offered — needs a real device to check concurrent-camera capability)
 - [x] Local video storage (countdown → record → save to `<DocumentDirectoryPath>/swings/<id>/source.mp4` + `analysis-manifest.json`, via `@dr.pogodin/react-native-fs` — not build-verified, see below)
-- [ ] Replay
-- [ ] History
+- [ ] Replay (needs a video-playback library decision — next step)
+- [x] History (`HistoryScreen` lists saved swings via `swingRepository.listSwings()`, scanning the filesystem — not build-verified, see below)
 - [ ] Crash handling
 - [x] CI pipeline
 
@@ -116,7 +116,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 12. [ ] Basic golf swing phase detection
 13. [ ] Post-swing feedback
 14. [x] Local swing storage
-15. [ ] Swing-history screen
+15. [x] Swing-history screen
 16. [ ] Video replay
 17. [ ] Slow-motion playback
 18. [ ] Frame-by-frame scrubbing

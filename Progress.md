@@ -6,6 +6,31 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 02:08 KST — Step 5: Swing domain model + local repository + History screen
+
+Scoped to reading back what Step 4 wrote — a shared `Swing` type, a repository that lists saved swings, and a real History screen. Deliberately not SQLite or Replay (see below and the next step).
+
+**Revisited `packages/local-database`'s "SQLite" README** (written in Step 1, before any real swing data existed) now that swing history is actually needed. Decision: **defer SQLite** — `analysis-manifest.json` per swing already is the durable record, a personal local swing history is realistically hundreds of entries (not a query-performance problem), and SQLite would mean another native dependency that can't be compile-verified here for a scale problem that doesn't exist yet. Recorded in `docs/adr/0006-defer-sqlite.md`. `packages/local-database`'s README updated to point at it instead of implying SQLite is imminent.
+
+**Built:**
+
+- `packages/domain` got its first real content (previously just a README): a `Swing` type matching what `RecordScreen` actually writes, and `parseSwingManifest` — a validating parser that throws `InvalidSwingManifestError` on anything malformed rather than silently accepting partial data. Pure TypeScript, no React Native/I/O, with a real Jest test (10 cases: one valid manifest, nine rejection cases covering each field).
+- `apps/mobile` now depends on `@golf-swing/domain` (`workspace:*`) — the first real cross-package import in this monorepo, exercising the monorepo Metro/pnpm/TypeScript wiring built in Step 2. Confirmed the symlink (`apps/mobile/node_modules/@golf-swing/domain -> packages/domain`) resolves correctly for both `tsc` and Jest without any extra configuration.
+- `apps/mobile/src/data/swingRepository.ts`: `listSwings()` — `readDir`s the swings root, reads and parses each `analysis-manifest.json` via the domain package's parser, skips (warns, doesn't crash) any directory with a missing/corrupt manifest, sorts newest first. Returns `[]` rather than throwing when the swings directory doesn't exist yet (no swings recorded is not an error).
+- `HistoryScreen.tsx` replaced (placeholder → real): loads swings on mount, renders a list (club, view, date, duration) with loading/empty/error states — real data flow, not a static mock list.
+
+**Testing:** extended the RNFS mock with `readDir`; wrote a `swingRepository` test (mixed valid/corrupt/non-directory entries, asserting the corrupt one is skipped and sort order is correct) and a `HistoryScreen` test (empty state, and rendering real fetched swings).
+
+**Bug caught while writing the `HistoryScreen` test:** same class of issue as Steps 2/4 — `{swing.clubType} · {swing.cameraView}` compiles to an array of JSX children (`['driver', ' · ', 'face-on']`), not one string, so a naive `children === 'driver'` check failed. Fixed the test helper to join array children before matching, consistent with the fix already applied in `App.test.tsx`.
+
+**Full workspace validation passed:** `pnpm lint`, `pnpm typecheck`, `pnpm test` (all 4 workspace packages, including the new `packages/domain`), `pnpm doctor` — all green.
+
+**Known open items:**
+
+- Reading real saved swings on an actual device is still not verified — no Xcode/Android Studio in this environment.
+- Replay (video playback) is next — needs its own native-dependency decision (e.g. `react-native-video`) and its own test-mocking approach.
+- No delete/export/tagging/comparison yet.
+
 ## 2026-08-03 01:55 KST — Step 4: Actual recording capture (countdown, start/stop, local file save)
 
 Scoped deliberately to just recording + local file save — no SQLite/`packages/local-database`, History screen, or Replay yet, since those need something to list/play back, which only exists after this step.
@@ -149,4 +174,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Step 5 (not started): a queryable local swing repository (SQLite, `packages/local-database`) plus a History screen listing saved swings, and Replay (PRD "Phase 1: Recording Foundation" remaining items: history, replay, crash handling). Real device/build verification for everything camera-related is still blocked on Xcode/Android Studio being installed.
+Step 6 (not started): Replay (video playback of a saved swing) — needs a video-playback library decision (e.g. `react-native-video`) and crash handling (PRD "Phase 1: Recording Foundation" remaining items). Real device/build verification for everything camera-related is still blocked on Xcode/Android Studio being installed.
