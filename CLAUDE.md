@@ -29,6 +29,8 @@ Never intentionally access, modify, or search files outside this project unless 
 
 Never use personal files on the computer.
 
+Never edit, commit, or push changes to this file (`CLAUDE.md`) unless the user explicitly says so in that conversation — not implied by a related request, not inferred from "update everything," a direct instruction to change this specific file.
+
 ---
 
 # Development Philosophy
