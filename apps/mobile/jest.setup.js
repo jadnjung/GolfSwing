@@ -63,9 +63,13 @@ jest.mock('react-native-video', () => {
   const React = require('react');
   const { View } = require('react-native');
 
+  // Exposed as a static (mirroring MockCamera's pattern above) so tests can
+  // assert what a frame-step button actually seeked to.
+  const mockSeek = jest.fn();
+
   const MockVideo = React.forwardRef((props, ref) => {
     React.useImperativeHandle(ref, () => ({
-      seek: jest.fn(),
+      seek: mockSeek,
       resume: jest.fn(),
       pause: jest.fn(),
     }));
@@ -75,6 +79,7 @@ jest.mock('react-native-video', () => {
     });
   });
   MockVideo.displayName = 'Video';
+  MockVideo.mockSeek = mockSeek;
 
   return { __esModule: true, default: MockVideo };
 });

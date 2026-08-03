@@ -8,6 +8,7 @@ import {
 import {
   deleteAllSwings,
   deleteSwing,
+  getSwing,
   getSwingSizeBytes,
   getTotalSwingsSizeBytes,
   listSwings,
@@ -132,6 +133,28 @@ describe('setSwingTags', () => {
     mockedReadFile.mockResolvedValue('not valid json{{{');
     await expect(setSwingTags('swing-1', ['tag'])).rejects.toThrow();
     expect(mockedWriteFile).not.toHaveBeenCalled();
+  });
+});
+
+describe('getSwing', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('reads and parses a single swing manifest', async () => {
+    mockedReadFile.mockResolvedValue(JSON.stringify(newerManifest));
+    await expect(getSwing('swing-newer')).resolves.toEqual({
+      ...newerManifest,
+      tags: [],
+    });
+    expect(mockedReadFile).toHaveBeenCalledWith(
+      '/mock/documents/swings/swing-newer/analysis-manifest.json',
+    );
+  });
+
+  it('throws rather than returning a corrupt manifest', async () => {
+    mockedReadFile.mockResolvedValue('not valid json{{{');
+    await expect(getSwing('swing-1')).rejects.toThrow();
   });
 });
 

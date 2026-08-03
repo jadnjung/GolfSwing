@@ -118,8 +118,8 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 14. [x] Local swing storage
 15. [x] Swing-history screen
 16. [x] Video replay
-17. [ ] Slow-motion playback
-18. [ ] Frame-by-frame scrubbing
+17. [x] Slow-motion playback (`ReplayScreen`'s 1x/0.5x/0.25x rate buttons, driven by `react-native-video`'s `rate` prop — PRD 5.10 — not build-verified)
+18. [x] Frame-by-frame scrubbing (`ReplayScreen`'s frame-step buttons, seeking by one frame duration computed from the swing's recorded `frameRate` via the new `swingRepository.getSwing` — PRD 5.10 — not build-verified)
 19. [x] Swing tagging (`HistoryScreen`'s tag editor modal — add/remove free-text tags per swing, persisted via `swingRepository.setSwingTags` — PRD 5.11 — not build-verified)
 20. [x] Side-by-side comparison with a previous swing (`SelectComparisonSwingScreen` picks a second swing, `CompareScreen` plays both independently, stacked — no phase sync/overlays yet, those need Phase 2 — not build-verified)
 21. [x] Local deletion (`HistoryScreen`'s "Delete" button per swing, confirmation via `Alert.alert` including the estimated storage freed, `swingRepository.deleteSwing` removes the whole swing directory — PRD 9.8; `SettingsScreen`'s "Delete all data" control adds the delete-all-data tier, same storage estimate — not build-verified)

@@ -92,6 +92,18 @@ export async function getTotalSwingsSizeBytes(): Promise<number> {
 }
 
 /**
+ * Reads and parses a single swing's manifest, for screens (replay,
+ * frame-stepping) that need one swing's metadata without listing all of
+ * them. Throws if the manifest is missing or corrupt — unlike `listSwings`,
+ * there's no sensible "skip it" fallback when the caller asked for this
+ * exact swing.
+ */
+export async function getSwing(swingId: string): Promise<Swing> {
+  const manifestRaw = await readFile(manifestPath(swingId));
+  return parseSwingManifest(JSON.parse(manifestRaw));
+}
+
+/**
  * Lists saved swings, newest first, by scanning the swings directory and
  * parsing each analysis-manifest.json (see docs/adr/0006-defer-sqlite.md for
  * why this isn't a database query). A directory with a missing or corrupt

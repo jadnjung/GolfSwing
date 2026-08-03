@@ -6,6 +6,21 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 20:05 KST — Step 20: Slow-motion playback and frame-by-frame scrubbing
+
+Closes MVP items 17 and 18 (PRD 5.10). Both had been mis-flagged in the prior "Next up" note as physical-device-blocked — they're not: `react-native-video`'s `rate` prop and imperative `seek()` work the same on a simulator/emulator as on a device, since they only control local file playback, not camera hardware.
+
+**Built:**
+- `ReplayScreen` gained a row of 1x/0.5x/0.25x rate buttons (`rate` prop) for slow-motion playback.
+- A frame-step control (`◀ Frame` / `Frame ▶`) pauses playback and seeks by exactly one frame duration (`1 / frameRate`), computed from the swing's own recorded frame rate rather than an assumed constant — added `swingRepository.getSwing(swingId)` to read a single manifest for this (previously only `listSwings()` existed, which reads every manifest). Falls back to a 30fps-equivalent step if the manifest can't be read, rather than blocking the control entirely.
+- Stepping tracks `currentTime` via `onProgress` and clamps at 0 so repeated back-steps can't seek negative.
+
+**Testing:** extended the existing `__tests__/ReplayScreen.test.tsx` (rather than adding a parallel `src/screens/ReplayScreen.test.tsx` — caught and reverted a duplicate before committing, since screen tests live under `__tests__/` in this repo, not beside the screen file) with cases for frame-stepping forward/back, the zero-clamp, rate selection, and the manifest-unreadable fallback. Also added `getSwing` coverage to `swingRepository.test.ts`, and exposed the video mock's `seek` as a static (`Video.mockSeek`) in `jest.setup.js`, mirroring the existing `MockCamera.mockStartRecording` pattern, so tests can assert what a frame-step actually seeked to.
+
+**Validated:** `pnpm -r lint`, `pnpm -r typecheck`, `pnpm -r test` (77 tests / 14 suites in `apps/mobile`) all passing. Not build-verified on a real simulator/emulator (both shut down per earlier instruction) — the native `rate`/`seek` behavior itself hasn't been visually confirmed, only the JS-level logic driving it.
+
+---
+
 ## 2026-08-03 19:15 KST — Step 19: Tab bar icons
 
 Closes the tab-bar icon gap Step 12 surfaced (a "missing icon" placeholder box on every tab) — the last open item after Step 18 finished the MVP-scope feature work.
@@ -511,4 +526,10 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Every MVP-scope item genuinely buildable without a physical device or Phase 2 pose data is done, and the tab-bar icon gap (the last open polish item) is closed. What remains in `Checklist.md`'s MVP tracker now falls into two buckets, both genuinely blocked rather than avoidable with more UI work: a physical device (camera/pose/permission testing, landscape mode, real frame-rate/format wiring — simulators/emulators can't exercise these meaningfully) or Phase 2 analysis data (skeleton overlay, joint angles, phase detection, feedback, metric deltas — all need a pose-inference library decision that's itself gated behind real-device validation, ADR 0009). This is a genuine pause point, not a place to keep manufacturing native-independent work — worth checking with the user on priority before continuing.
+Steps 19 and 20 closed out every remaining MVP-scope item that turned out to be genuinely buildable without a physical device — including slow-motion playback and frame-by-frame scrubbing (MVP 17/18), which an earlier version of this note incorrectly filed under "needs a physical device" (`react-native-video`'s `rate`/`seek` only touch local file playback, not camera hardware, so they work the same on a simulator/emulator).
+
+What's left in `Checklist.md`'s MVP tracker now genuinely does need one of two things:
+- **A physical device**: camera/pose permission testing, landscape recording mode, wiring the frame-rate selector to a real device format — simulators/emulators have no real camera and report synthetic formats.
+- **Phase 2 analysis data**: skeleton overlay, joint angles, phase detection, feedback, metric deltas, automatic swing-event detection, annotated export — all gated behind the pose-inference library decision, itself deferred pending real-device validation (`docs/adr/0009-defer-pose-inference-library.md`).
+
+This is a genuine pause point, not a place to keep manufacturing native-independent work — worth checking with the user on priority (physical device access vs. Phase 2 planning) before continuing.
