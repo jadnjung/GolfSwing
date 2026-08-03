@@ -1,5 +1,5 @@
 import { readDir, readFile } from '@dr.pogodin/react-native-fs';
-import { listSwings } from './swingRepository';
+import { listSwings, swingVideoPath } from './swingRepository';
 
 const mockedReadDir = readDir as jest.Mock;
 const mockedReadFile = readFile as jest.Mock;
@@ -41,6 +41,14 @@ const newerManifest = {
   durationMs: 4000,
   analysisStatus: 'pending',
 };
+
+describe('swingVideoPath', () => {
+  it('builds the source video path for a swing id', () => {
+    expect(swingVideoPath('swing-1')).toBe(
+      '/mock/documents/swings/swing-1/source.mp4',
+    );
+  });
+});
 
 describe('listSwings', () => {
   afterEach(() => {

@@ -7,6 +7,11 @@ import { parseSwingManifest, type Swing } from '@golf-swing/domain';
 
 export const SWINGS_ROOT = `${DocumentDirectoryPath}/swings`;
 
+/** Path to a saved swing's source video, per the layout RecordScreen writes. */
+export function swingVideoPath(swingId: string): string {
+  return `${SWINGS_ROOT}/${swingId}/source.mp4`;
+}
+
 /**
  * Lists saved swings, newest first, by scanning the swings directory and
  * parsing each analysis-manifest.json (see docs/adr/0006-defer-sqlite.md for

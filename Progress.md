@@ -6,6 +6,32 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 11:45 KST — Step 6: Replay (video playback of a saved swing)
+
+Scoped to Replay only, per the plan left at the end of Step 5 — a video-playback library decision, plus enough navigation to actually reach a saved swing's video from History.
+
+**Library decision:** Checked npm for the realistic options. `react-native-video` 6.19.2 is the current stable line (66+ published 6.x releases, most recent 2026-07-07), with no narrow peer-version window to work around (`react: '*'`, `react-native: '*'`) — unlike the reanimated 4.x constraint hit in ADR 0003. Hand-writing an AVPlayer/ExoPlayer wrapper was rejected for the same reason ADR 0004 rejected hand-written camera capture: reimplementing a mature library, unverifiable in an environment with no Xcode/Android Studio anyway. `expo-video` was rejected per PRD section 7.4's existing rejection of managed-Expo dependencies for core native functionality. Recorded in `docs/adr/0007-video-playback-library.md`.
+
+**Navigation decision:** The History tab was a single flat screen with no way to push a detail view. Added `@react-navigation/native-stack` 7.18.6 (same major as the already-installed `@react-navigation/native` 7.3.14) and a new `HistoryStackNavigator` (`HistoryList` → `Replay`), swapped in as the History tab's screen component in `RootNavigator`. `HistoryScreen` and `ReplayScreen` are typed against a shared `HistoryStackParamList` (`apps/mobile/src/navigation/types.ts`) and receive `navigation`/`route` as ordinary props from React Navigation — no `useNavigation()`/`useRoute()` hooks, consistent with how every other screen in this codebase is written so far.
+
+**Built:**
+
+- `swingRepository.ts` gained `swingVideoPath(swingId)`, deriving `<DocumentDirectoryPath>/swings/<id>/source.mp4` from the same layout `RecordScreen` already writes — no new stored field needed since the path is fully determined by the id.
+- `HistoryScreen`'s `SwingRow` is now a `Pressable` that calls `navigation.navigate('Replay', { swingId })`.
+- `ReplayScreen.tsx`: a `loading → ready/error` state machine around `<Video controls>`, covering PRD section 5.10's baseline (play/pause/scrubber, via the library's built-in controls) — deliberately not slow-motion speed control or frame-by-frame scrubbing (MVP items 17-18), which depend on pose data that doesn't exist until Phase 2 and are a separate, later step.
+
+**Testing:** added a Jest mock for `react-native-video` in `jest.setup.js` (ships none, same treatment as vision-camera) exposing just the `onLoad`/`onError` callback surface `ReplayScreen` uses. New `ReplayScreen.test.tsx` (source path, loading state, load transitions to ready, error transitions to error state). Extended `HistoryScreen.test.tsx` with a navigation mock (`{ navigation: { navigate: jest.fn() } }` — no full `NavigationContainer` needed, since screens receive navigation as a prop) and a test asserting a row press calls `navigate('Replay', { swingId })`. Added a `swingVideoPath` unit test to `swingRepository.test.ts`.
+
+**Bug caught by `tsc`:** `noUncheckedIndexedAccess` flagged `findAllByProps(...)[0]` as possibly `undefined` in the new navigation test — fixed with array destructuring plus a non-null assertion, since the preceding assertion already guarantees the row exists.
+
+**Full workspace validation passed:** `pnpm lint`, `pnpm typecheck`, `pnpm test` (5 mobile suites, 13 tests, plus the domain/tooling-smoke-test packages), `pnpm doctor` (Ruby only resolves correctly with `rbenv init` evaluated in the shell — known open item, not new) — all green.
+
+**Known open items:**
+
+- Playback is still not build-verified — no Xcode/Android Studio in this environment.
+- Slow-motion, frame-by-frame scrubbing, swing tagging, deletion, and comparison are all still open (MVP items 17-22).
+- Crash handling is the last unchecked Phase 1 deliverable — next step.
+
 ## 2026-08-03 02:08 KST — Step 5: Swing domain model + local repository + History screen
 
 Scoped to reading back what Step 4 wrote — a shared `Swing` type, a repository that lists saved swings, and a real History screen. Deliberately not SQLite or Replay (see below and the next step).
@@ -174,4 +200,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Step 6 (not started): Replay (video playback of a saved swing) — needs a video-playback library decision (e.g. `react-native-video`) and crash handling (PRD "Phase 1: Recording Foundation" remaining items). Real device/build verification for everything camera-related is still blocked on Xcode/Android Studio being installed.
+Step 7 (not started): Crash handling — the last unchecked Phase 1: Recording Foundation deliverable. Once that's done, Phase 1 is functionally complete (modulo build verification) and work moves to Phase 2: Pose Analysis MVP. Real device/build verification for everything camera- and video-related is still blocked on Xcode/Android Studio being installed.

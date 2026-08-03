@@ -43,7 +43,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 - [x] Recording setup screen (club/view/camera/frame-rate/audio selectors + live camera preview once permission is granted — not build-verified)
 - [x] Front/rear camera selection (dual explicitly not offered — needs a real device to check concurrent-camera capability)
 - [x] Local video storage (countdown → record → save to `<DocumentDirectoryPath>/swings/<id>/source.mp4` + `analysis-manifest.json`, via `@dr.pogodin/react-native-fs` — not build-verified, see below)
-- [ ] Replay (needs a video-playback library decision — next step)
+- [x] Replay (`ReplayScreen`, pushed from `HistoryScreen` via a nested stack navigator; `react-native-video` — not build-verified, see below)
 - [x] History (`HistoryScreen` lists saved swings via `swingRepository.listSwings()`, scanning the filesystem — not build-verified, see below)
 - [ ] Crash handling
 - [x] CI pipeline
@@ -117,7 +117,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 13. [ ] Post-swing feedback
 14. [x] Local swing storage
 15. [x] Swing-history screen
-16. [ ] Video replay
+16. [x] Video replay
 17. [ ] Slow-motion playback
 18. [ ] Frame-by-frame scrubbing
 19. [ ] Swing tagging

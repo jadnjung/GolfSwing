@@ -1,5 +1,5 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { HistoryScreen } from '../screens/HistoryScreen';
+import { HistoryStackNavigator } from './HistoryStackNavigator';
 import { HomeScreen } from '../screens/HomeScreen';
 import { RecordScreen } from '../screens/RecordScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
@@ -41,7 +41,7 @@ export function RootNavigator() {
       />
       <Tab.Screen
         name="History"
-        component={HistoryScreen}
+        component={HistoryStackNavigator}
         listeners={{ focus: onFocus('History') }}
       />
       <Tab.Screen

@@ -56,6 +56,29 @@ jest.mock('react-native-vision-camera', () => {
   };
 });
 
+// react-native-video ships no Jest mock — its playback is entirely
+// native-backed. Mock just the surface ReplayScreen actually uses; tests
+// invoke onLoad/onError directly to drive the loading/ready/error states.
+jest.mock('react-native-video', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  const MockVideo = React.forwardRef((props, ref) => {
+    React.useImperativeHandle(ref, () => ({
+      seek: jest.fn(),
+      resume: jest.fn(),
+      pause: jest.fn(),
+    }));
+    return React.createElement(View, {
+      ...props,
+      testID: props.testID ?? 'mock-video',
+    });
+  });
+  MockVideo.displayName = 'Video';
+
+  return { __esModule: true, default: MockVideo };
+});
+
 // @dr.pogodin/react-native-fs is entirely native-backed; mock just the
 // functions RecordScreen actually calls. Resolve successfully by default —
 // tests override per-case for failure scenarios.

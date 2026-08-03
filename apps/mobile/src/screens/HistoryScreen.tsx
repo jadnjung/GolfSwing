@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Swing } from '@golf-swing/domain';
 import { listSwings } from '../data/swingRepository';
+import type { HistoryStackParamList } from '../navigation/types';
 import { colors, spacing } from '../theme/theme';
+
+type Props = NativeStackScreenProps<HistoryStackParamList, 'HistoryList'>;
 
 type LoadState = 'loading' | 'loaded' | 'error';
 
@@ -15,20 +19,20 @@ function formatDate(iso: string): string {
   return Number.isNaN(date.getTime()) ? iso : date.toLocaleString();
 }
 
-function SwingRow({ swing }: { swing: Swing }) {
+function SwingRow({ swing, onPress }: { swing: Swing; onPress: () => void }) {
   return (
-    <View style={styles.row} testID="swing-row">
+    <Pressable style={styles.row} onPress={onPress} testID="swing-row">
       <Text style={styles.rowTitle}>
         {swing.clubType} · {swing.cameraView}
       </Text>
       <Text style={styles.rowSubtitle}>
         {formatDate(swing.createdAt)} · {formatDuration(swing.durationMs)}
       </Text>
-    </View>
+    </Pressable>
   );
 }
 
-export function HistoryScreen() {
+export function HistoryScreen({ navigation }: Props) {
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [swings, setSwings] = useState<Swing[]>([]);
 
@@ -61,7 +65,14 @@ export function HistoryScreen() {
         <FlatList
           data={swings}
           keyExtractor={swing => swing.id}
-          renderItem={({ item }) => <SwingRow swing={item} />}
+          renderItem={({ item }) => (
+            <SwingRow
+              swing={item}
+              onPress={() =>
+                navigation.navigate('Replay', { swingId: item.id })
+              }
+            />
+          )}
           style={styles.list}
         />
       )}
