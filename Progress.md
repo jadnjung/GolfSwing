@@ -6,6 +6,18 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 23:00 KST — Professional benchmark reference data (`packages/analysis-engine`)
+
+Followed up on the professional-swing-comparison research (previous entry) by implementing the part that's fully specified and native-independent right now — same pattern ADR 0009 used for `calculateJointAngleDegrees` before a pose-inference library existed to feed it real data.
+
+**Built:** `packages/analysis-engine/src/professionalBenchmarks.ts` — typed `ProfessionalBenchmark` records (low/high range, unit, source citation) for X-Factor, downswing tempo, driver clubhead speed, and hip/shoulder rotation, sourced from the CC-BY papers cited in `docs/architecture/professional-swing-benchmarks.md`. Ranges reported as mean ± SD in the source papers are represented here as mean ± 1 SD, documented as a conventional reading, not something the papers themselves state as a range. `compareToProfessionalBenchmark(value, benchmark)` returns `'below' | 'within' | 'above'` — deliberately not a "good/bad" judgment, since several benchmarks here (X-Factor, tempo) have professionals on the *lower* end relative to amateurs, so "above" isn't inherently better; that interpretation is a feedback-rule/UI concern needing golf-domain reviewer sign-off (PRD 18), not this function's job.
+
+**Not yet wired to anything user-facing** — there's no real swing metric to compare against until Phase 2's pose pipeline exists (still pending real-device benchmarking, ADR 0014). This is reference data and a comparison utility, ready for that day.
+
+**Validated:** `pnpm -r lint`, `pnpm -r typecheck`, `pnpm -r test` (analysis-engine: 14 tests / 2 suites; full monorepo unaffected) all passing.
+
+---
+
 ## 2026-08-03 22:30 KST — Professional swing comparison research
 
 You asked whether professional golfers' swings could be pulled from the internet to compare against a user's swing. Short answer: not as video — PRD 5.9 requires professional reference swings to be "properly licensed," and PRD 22 item 7 ("which professional swing footage can be licensed") is still an open, unresolved business decision, not something to route around technically.
