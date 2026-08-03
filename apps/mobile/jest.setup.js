@@ -79,6 +79,16 @@ jest.mock('react-native-video', () => {
   return { __esModule: true, default: MockVideo };
 });
 
+// react-native-share ships no Jest mock — its share sheet is entirely
+// native-backed. Tests configure open()'s resolved/rejected value per case
+// (success, user-cancelled, genuine failure).
+jest.mock('react-native-share', () => ({
+  __esModule: true,
+  default: {
+    open: jest.fn(async () => ({ success: true })),
+  },
+}));
+
 // @dr.pogodin/react-native-fs is entirely native-backed; mock just the
 // functions RecordScreen actually calls. Resolve successfully by default —
 // tests override per-case for failure scenarios.

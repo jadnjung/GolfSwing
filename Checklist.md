@@ -123,6 +123,6 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 19. [x] Swing tagging (`HistoryScreen`'s tag editor modal — add/remove free-text tags per swing, persisted via `swingRepository.setSwingTags` — PRD 5.11 — not build-verified)
 20. [ ] Side-by-side comparison with a previous swing
 21. [x] Local deletion (`HistoryScreen`'s "Delete" button per swing, confirmation via `Alert.alert` including the estimated storage freed, `swingRepository.deleteSwing` removes the whole swing directory — PRD 9.8; `SettingsScreen`'s "Delete all data" control adds the delete-all-data tier, same storage estimate — not build-verified)
-22. [ ] Local export of an annotated video
+22. [ ] Local export of an annotated video (`ReplayScreen`'s "Export" button shares the raw source video via `react-native-share` — PRD 9.3/5.10 — not "annotated," since overlay data doesn't exist until Phase 2; see `docs/adr/0011-video-export-library.md` — not build-verified)
 23. [x] Privacy and permission screens (privacy notice in `OnboardingScreen`'s first step; camera/mic permission gate already existed in `RecordScreen`, Step 3)
 24. [x] Crash reporting that does not upload swing videos or pose data (local-only error boundary + diagnostic log; no network path exists at all yet, so nothing uploads anything — external SDK integration deferred, see `docs/adr/0008-crash-handling-scope.md`)

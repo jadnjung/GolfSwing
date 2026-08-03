@@ -6,6 +6,26 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 18:30 KST — Step 17: Local video export
+
+Picked from the candidates left after Step 16: local export (MVP item 22) over side-by-side comparison (bigger scope, needs a two-swing picker and synchronized playback) and the tab-bar icon gap (needs an icon-library decision, lower value than a real MVP checklist item).
+
+**Library decision:** core React Native's `Share` API only reliably supports local `file://` URIs on iOS — Android throws `FileUriExposedException` for a raw file path passed into `ACTION_SEND`, needing a `content://` URI backed by a `FileProvider`, which core RN doesn't set up. Checked `react-native-share` (actively maintained, 12.3.1, no narrow peer-version constraint) — its bundled `AndroidManifest.xml` registers its own `FileProvider` that Gradle's manifest merger picks up automatically, so no manual per-project FileProvider XML is needed. Chose it over hand-configuring a `FileProvider` ourselves (real native Android work for an already-solved problem, same reasoning as ADRs 0004/0005/0007 against hand-rolling native code a maintained library already does correctly). Recorded in `docs/adr/0011-video-export-library.md`.
+
+**Scope decision:** exports the **raw source video only**, not an "annotated" one — PRD's annotated-export item needs overlay-rendered pose/angle data that doesn't exist until Phase 2. Labeled honestly in the Checklist (item 22 stays unchecked) rather than claiming a requirement is met when it isn't.
+
+**Built:** `ReplayScreen` gained an "Export" button (shown regardless of playback state, since export operates on the file path directly, not the player) that calls `Share.open({ url: 'file://<path>', type: 'video/mp4', filename, failOnCancel: false })`. `failOnCancel: false` makes the user dismissing the share sheet *resolve* the promise (with `dismissedAction: true`) rather than reject it — checked and treated as a normal, silent outcome; a genuine failure (e.g. no app can handle the file type) still surfaces an alert.
+
+**Testing:** added a manual Jest mock for `react-native-share` (ships none). Three new `ReplayScreen.test.tsx` cases: export calls `Share.open` with the right file URI/type/filename; dismissing the share sheet doesn't show an error; a genuine failure does.
+
+**Full workspace validation passed:** `pnpm lint`, `pnpm typecheck`, `pnpm test` (65 tests now, up from 62).
+
+**Known open items:**
+
+- Not build-verified on a real simulator/emulator (both shut down before Step 13, per your instruction) — the Android `FileProvider` behavior specifically cannot be verified without running through an actual share target on a real device/emulator.
+- Side-by-side comparison (MVP item 20) and the tab-bar icon gap (Step 12) are still open.
+- An actually "annotated" export (overlay-rendered clip) is still blocked on Phase 2 pose data — this step's `Share.open` call site shouldn't need to change when that's added, only what file path gets passed in.
+
 ## 2026-08-03 18:10 KST — Step 16: Storage-size estimates in delete confirmations
 
 Closes the last piece of PRD 9.8 flagged as open after Steps 13-14: "Confirmation showing estimated storage to be freed."
@@ -445,4 +465,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-PRD 9.8 (delete behavior) is now essentially complete except the optional undo period. Remaining native-independent candidates: local export of a swing's source video (MVP item 22 — real export, via the OS share sheet); side-by-side swing comparison (MVP item 20 — bigger scope, needs a two-swing-picker UI and a synchronized playback view); or the tab-bar icon gap from Step 12 (needs an icon-library decision first). A physical device is still the real unblock for camera capture, permission prompts, and pose-model benchmarking (ADR 0009) — simulators/emulators have no camera.
+Local export (Step 17) is done (source video only — annotated export waits on Phase 2). Remaining native-independent candidates: side-by-side swing comparison (MVP item 20 — the largest remaining MVP gap, needs a two-swing-picker UI and a synchronized playback view); or the tab-bar icon gap from Step 12 (needs an icon-library decision first, lower value than a real MVP item). A physical device is still the real unblock for camera capture, permission prompts, and pose-model benchmarking (ADR 0009) — simulators/emulators have no camera.
