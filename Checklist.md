@@ -25,7 +25,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 - [ ] Final product scope (several PRD section 22 decisions still open, e.g. min Android API level as a _product_ choice, subscription price, free-tier limits)
 - [x] Supported device matrix (`docs/qa/device-matrix.md` — capability tiers and minimum OS versions defined; physical device acquisition/testing itself still pending, see the doc's own caveats)
 - [ ] Camera proof of concept (app builds and runs on a real iOS simulator and Android emulator now, Steps 11–12 — but actual camera capture/recording still needs a physical device, simulators/emulators have no real camera)
-- [ ] Pose-model benchmark (blocked on the pose-inference library decision — real device access alone doesn't unblock this, see `docs/adr/0009-defer-pose-inference-library.md`)
+- [ ] Pose-model benchmark (shortlisted to `react-native-fast-tflite` + a vetted BlazePose model, see `docs/adr/0014-pose-inference-shortlist.md` — still needs real-device latency/accuracy benchmarking before this is done, real device access alone doesn't unblock it)
 - [x] Ball-tracking feasibility report (`docs/architecture/ball-tracking-feasibility.md` — desk assessment against PRD 5.6's four levels; no measured accuracy, since that needs real recorded footage)
 - [x] Swing-angle definitions (`docs/architecture/swing-angle-definitions.md` — maps every PRD 5.3 measurement to specific landmarks/formulas; surfaced that handedness isn't captured anywhere in the app yet)
 - [ ] Golf-instructor review (needs a real domain-expert reviewer — not something this agent can substitute for)
@@ -50,7 +50,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 ## Phase 2: Pose Analysis MVP (PRD 16)
 
-- [ ] Pose inference (`native/ios-pose-inference`, `native/android-pose-inference` — library choice deliberately deferred, see `docs/adr/0009-defer-pose-inference-library.md`)
+- [ ] Pose inference (`native/ios-pose-inference`, `native/android-pose-inference` — shortlisted to `react-native-fast-tflite` + BlazePose, see `docs/adr/0014-pose-inference-shortlist.md`; still not accepted pending real-device benchmarking)
 - [ ] Skeleton overlay
 - [ ] Landmark smoothing
 - [ ] Phase estimation

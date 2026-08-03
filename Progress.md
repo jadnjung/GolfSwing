@@ -6,6 +6,22 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 22:00 KST — Pose-inference library research (ADR 0014)
+
+ADR 0009 deferred this decision back when the environment had no network access to actually survey the landscape. Re-checked now that it does — re-surveyed every realistic React Native pose wrapper, not just the one (`react-native-mediapipe`, cdiddy77) ADR 0009 already ruled out for staleness (still 0.6.0, still last published 2024-12-12, unchanged).
+
+**New candidates checked and rejected:** `@gymbrosinc/react-native-mediapipe-pose` (requires `expo` as a peer dependency — disqualified per PRD 7.4's rejection of managed Expo, same reasoning as ADR 0012/0013); `react-native-mediapipe-posedetection` (EndLess728) (only 3 versions ever published, 23 commits, and its own README documents "~15 FPS throttling to prevent memory issues" — a real red flag, not just thin adoption); `@thinksys/react-native-mediapipe` (cleanest maintenance profile of the wrapper options, but ships its own self-contained camera component rather than a `react-native-vision-camera` frame processor or file-based inference API — an architectural mismatch with PRD 8.2's post-processing-over-saved-video pipeline, not just a maintenance gap).
+
+**Shortlisted instead:** `react-native-fast-tflite` (mrousavy — same author as `react-native-vision-camera`, ADR 0004) — a generic TFLite runtime, not a MediaPipe-specific wrapper, actively maintained (3.0.1, 2026-04-21) with a steady release cadence since 2024. Being generic is the actual advantage here: it can run inference over live camera frames (via a vision-camera frame processor, per the author's own published tutorial) **or** over frames decoded from an already-recorded video file — the latter is what PRD 8.2 actually needs most, since post-processing the saved swing is the primary pipeline, live guidance a secondary one.
+
+**Model choice:** BlazePose (33 landmarks, 3D coordinates, per-landmark visibility, Apache 2.0) over MoveNet (17 keypoints, no depth, no explicit foot points) — BlazePose actually covers PRD POSE-002/003's stated requirements (feet/heel-toe points, optional depth), MoveNet doesn't. Bringing our own model file also satisfies PRD 8.3's model-versioning requirements (our own checksum/semver/license/training-data description) directly, rather than depending on whatever a wrapper library bundles.
+
+Recorded as `docs/adr/0014-pose-inference-shortlist.md`, deliberately marked **Proposed**, not **Accepted** — real-device latency/accuracy benchmarking (PRD 23's Proof of Concept B, PRD 8.4's evaluation criteria) is still the actual gate, and this environment still can't run it. This narrows that future work from "survey the whole landscape again" to "benchmark one shortlisted approach, with hand-written native modules as the documented fallback."
+
+Updated `Checklist.md`'s "Pose-model benchmark" and "Pose inference" items to point at the new ADR instead of ADR 0009 alone.
+
+---
+
 ## 2026-08-03 21:30 KST — DevOps cleanup: CODEOWNERS and CI Action SHA pinning
 
 Two long-open items from the Foundational/DevOps checklist section, closed now that this session has real network access to resolve them:
