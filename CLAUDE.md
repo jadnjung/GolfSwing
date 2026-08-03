@@ -190,6 +190,17 @@ Never:
 
 If a potentially destructive operation is required, explain why before proceeding.
 
+## Protecting secret information
+
+This app is local-only for its entire current scope (no backend, no required account, no network path exists yet) — there are no API keys, tokens, or credentials for it to need today. Keep it that way by default:
+
+- Never hardcode an API key, token, password, or private certificate/key into source, config, or a commit — even a "temporary" one for local testing.
+- Any credential a feature genuinely needs goes in an untracked `.env` file (already covered by `.gitignore`) or GitHub Actions secrets for CI — never committed, never logged, never printed to a terminal that gets pasted elsewhere.
+- The one exception already in this repo: `apps/mobile/android/app/debug.keystore` is the React Native template's standard **debug**-only keystore with well-known, publicly documented default credentials (`androiddebugkey` / `android`) — this is normal to commit and share across a team. A **release** signing keystore or provisioning profile private key must never be committed, regardless of this exception.
+- CI already runs a Gitleaks secret scan (`.github/workflows/pr-checks.yml`) on every PR — treat a failure there as a real finding to investigate, not something to bypass or silence.
+- If a secret is ever accidentally committed, treat it as compromised the moment it's pushed — rotating/revoking it comes first. Deleting it in a later commit is not sufficient on its own, since it still exists in prior history; removing it from history is a separate, explicit decision (see Git Workflow's rules on never rewriting history without being asked).
+- If and when a real cloud feature is eventually built (PRD section 7.10 — explicitly deferred, opt-in, not part of current scope), revisit this section rather than assuming the same "no secrets" posture still holds.
+
 ---
 
 # Communication
