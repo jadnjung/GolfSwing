@@ -8,6 +8,8 @@ import {
 import {
   deleteAllSwings,
   deleteSwing,
+  getSwingSizeBytes,
+  getTotalSwingsSizeBytes,
   listSwings,
   setSwingTags,
   swingVideoPath,
@@ -19,11 +21,11 @@ const mockedUnlink = unlink as jest.Mock;
 const mockedExists = exists as jest.Mock;
 const mockedWriteFile = writeFile as jest.Mock;
 
-function dirEntry(path: string) {
+function dirEntry(path: string, size = 0) {
   return {
     path,
     name: path.split('/').pop() ?? path,
-    size: 0,
+    size,
     mtime: null,
     ctime: null,
     isDirectory: () => true,
@@ -31,8 +33,12 @@ function dirEntry(path: string) {
   };
 }
 
-function fileEntry(path: string) {
-  return { ...dirEntry(path), isDirectory: () => false, isFile: () => true };
+function fileEntry(path: string, size = 0) {
+  return {
+    ...dirEntry(path, size),
+    isDirectory: () => false,
+    isFile: () => true,
+  };
 }
 
 const olderManifest = {
@@ -126,6 +132,56 @@ describe('setSwingTags', () => {
     mockedReadFile.mockResolvedValue('not valid json{{{');
     await expect(setSwingTags('swing-1', ['tag'])).rejects.toThrow();
     expect(mockedWriteFile).not.toHaveBeenCalled();
+  });
+});
+
+describe('getSwingSizeBytes', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('sums the size of the files in a swing directory', async () => {
+    mockedReadDir.mockResolvedValue([
+      fileEntry('/mock/documents/swings/swing-1/source.mp4', 1000),
+      fileEntry('/mock/documents/swings/swing-1/analysis-manifest.json', 200),
+    ]);
+    await expect(getSwingSizeBytes('swing-1')).resolves.toBe(1200);
+  });
+
+  it('returns 0 when the swing does not exist', async () => {
+    mockedReadDir.mockRejectedValue(new Error('ENOENT'));
+    await expect(getSwingSizeBytes('swing-1')).resolves.toBe(0);
+  });
+});
+
+describe('getTotalSwingsSizeBytes', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('sums every swing directory', async () => {
+    mockedReadDir.mockImplementation(async (path: string) => {
+      if (path === '/mock/documents/swings') {
+        return [
+          dirEntry('/mock/documents/swings/swing-older'),
+          dirEntry('/mock/documents/swings/swing-newer'),
+        ];
+      }
+      if (path.includes('swing-older')) {
+        return [fileEntry(`${path}/source.mp4`, 500)];
+      }
+      if (path.includes('swing-newer')) {
+        return [fileEntry(`${path}/source.mp4`, 1500)];
+      }
+      throw new Error(`unexpected readDir: ${path}`);
+    });
+
+    await expect(getTotalSwingsSizeBytes()).resolves.toBe(2000);
+  });
+
+  it('returns 0 when no swings have been recorded yet', async () => {
+    mockedReadDir.mockRejectedValue(new Error('ENOENT'));
+    await expect(getTotalSwingsSizeBytes()).resolves.toBe(0);
   });
 });
 

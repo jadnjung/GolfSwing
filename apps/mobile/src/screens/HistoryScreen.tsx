@@ -12,9 +12,15 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Swing } from '@golf-swing/domain';
-import { deleteSwing, listSwings, setSwingTags } from '../data/swingRepository';
+import {
+  deleteSwing,
+  getSwingSizeBytes,
+  listSwings,
+  setSwingTags,
+} from '../data/swingRepository';
 import type { HistoryStackParamList } from '../navigation/types';
 import { colors, spacing } from '../theme/theme';
+import { formatBytes } from '../utils/formatBytes';
 
 type Props = NativeStackScreenProps<HistoryStackParamList, 'HistoryList'>;
 
@@ -166,10 +172,11 @@ export function HistoryScreen({ navigation }: Props) {
   }, [load]);
 
   const confirmDelete = useCallback(
-    (swing: Swing) => {
+    async (swing: Swing) => {
+      const sizeBytes = await getSwingSizeBytes(swing.id);
       Alert.alert(
         'Delete this swing?',
-        `${swing.clubType} · ${formatDate(swing.createdAt)} will be permanently deleted. This can't be undone.`,
+        `${swing.clubType} · ${formatDate(swing.createdAt)} will be permanently deleted, freeing ${formatBytes(sizeBytes)}. This can't be undone.`,
         [
           { text: 'Cancel', style: 'cancel' },
           {

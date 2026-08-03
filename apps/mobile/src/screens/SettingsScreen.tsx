@@ -2,9 +2,13 @@ import { useCallback, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text } from 'react-native';
 import { ActiveTabBanner } from '../components/ActiveTabBanner';
 import { ScreenContainer } from '../components/ScreenContainer';
-import { deleteAllSwings } from '../data/swingRepository';
+import {
+  deleteAllSwings,
+  getTotalSwingsSizeBytes,
+} from '../data/swingRepository';
 import { useProfileStore } from '../state/profileStore';
 import { spacing } from '../theme/theme';
+import { formatBytes } from '../utils/formatBytes';
 
 // PRD 9.8: "delete-all-data control" — distinct from per-swing deletion
 // (HistoryScreen). Also honors the promise OnboardingScreen's privacy
@@ -14,10 +18,11 @@ export function SettingsScreen() {
   const clearProfile = useProfileStore(state => state.clear);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const confirmDeleteAllData = useCallback(() => {
+  const confirmDeleteAllData = useCallback(async () => {
+    const sizeBytes = await getTotalSwingsSizeBytes();
     Alert.alert(
       'Delete all data?',
-      "This permanently deletes every saved swing and resets your profile — you'll go through setup again. This can't be undone.",
+      `This permanently deletes every saved swing (freeing ${formatBytes(sizeBytes)}) and resets your profile — you'll go through setup again. This can't be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {

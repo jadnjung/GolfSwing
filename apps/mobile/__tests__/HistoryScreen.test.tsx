@@ -130,6 +130,58 @@ describe('HistoryScreen', () => {
     });
   });
 
+  it('shows the estimated storage to be freed in the delete confirmation', async () => {
+    mockedReadDir.mockImplementation(async (path: string) => {
+      if (path === '/mock/documents/swings') {
+        return [
+          {
+            path: '/mock/documents/swings/swing-1',
+            name: 'swing-1',
+            size: 0,
+            mtime: null,
+            ctime: null,
+            isDirectory: () => true,
+            isFile: () => false,
+          },
+        ];
+      }
+      // getSwingSizeBytes reading the swing's own directory contents.
+      return [
+        {
+          path: `${path}/source.mp4`,
+          name: 'source.mp4',
+          size: 2 * 1024 * 1024,
+          mtime: null,
+          ctime: null,
+          isDirectory: () => false,
+          isFile: () => true,
+        },
+      ];
+    });
+    mockedReadFile.mockResolvedValue(JSON.stringify(savedManifest));
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+
+    await act(async () => {
+      tree = ReactTestRenderer.create(
+        <HistoryScreen {...mockNavigationProps()} />,
+      );
+    });
+
+    await act(async () => {
+      await tree!.root
+        .findByProps({ testID: 'delete-swing-button' })
+        .props.onPress();
+    });
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      'Delete this swing?',
+      expect.stringContaining('2.0 MB'),
+      expect.anything(),
+    );
+
+    alertSpy.mockRestore();
+  });
+
   it('deletes a swing after the user confirms, and refreshes the list', async () => {
     mockOneSavedSwing();
     mockedUnlink.mockResolvedValue(undefined);

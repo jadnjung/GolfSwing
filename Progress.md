@@ -6,6 +6,26 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 18:10 KST — Step 16: Storage-size estimates in delete confirmations
+
+Closes the last piece of PRD 9.8 flagged as open after Steps 13-14: "Confirmation showing estimated storage to be freed."
+
+**Repository:** `swingRepository` gained `getSwingSizeBytes(swingId)` (sums file sizes in one swing's directory — flat, no subdirectories, so a single `readDir` is enough; `readDir`'s own result entries already carry `size` per file, no separate `stat()` calls needed) and `getTotalSwingsSizeBytes()` (sums every swing). Both return `0` rather than throwing when nothing exists yet — this is informational for a confirmation dialog, not a precondition that should block anything.
+
+**Utility:** new `src/utils/formatBytes.ts` (`formatBytes(bytes)` → `"4.2 MB"` etc.) — the first file in a plain `utils/` directory in this app; small and general enough not to belong in `data/` or any single screen's file.
+
+**UI:** `HistoryScreen`'s per-swing delete confirmation and `SettingsScreen`'s delete-all-data confirmation both now fetch the relevant size before showing the `Alert` and include it in the message (e.g. "will be permanently deleted, freeing 4.2 MB").
+
+**Testing:** `formatBytes.test.ts` (byte/KB/MB/GB boundaries). `swingRepository.test.ts` gained `getSwingSizeBytes`/`getTotalSwingsSizeBytes` cases (sums correctly; returns 0 when nothing exists). `HistoryScreen.test.tsx` and `SettingsScreen.test.tsx` each gained a case asserting the formatted size actually appears in the alert message, not just that some size was computed — the two existing "deletes after confirming" tests already exercised the async `getSwingSizeBytes`/`getTotalSwingsSizeBytes` call implicitly (via the default RNFS mock resolving to empty results) without needing changes, which is worth noting as a case where an existing test kept passing without being a meaningful check of the new behavior — hence the two new, more targeted tests.
+
+**Full workspace validation passed:** `pnpm lint`, `pnpm typecheck`, `pnpm test` (62 tests now, up from 49).
+
+**Known open items:**
+
+- Not build-verified on a real simulator/emulator (both shut down before Step 13, per your instruction).
+- PRD 9.8's "optional short undo period before final removal" is still unbuilt — the last remaining piece of that section.
+- The tab-bar icon gap from Step 12 is still open.
+
 ## 2026-08-03 17:50 KST — Step 15: Swing tagging
 
 Picked from the candidates left after Step 14: swing tagging (MVP item 19) over the tab-bar icon gap — another concrete MVP checklist item, native-independent, and directly extends `HistoryScreen`'s existing per-swing action row (Tags, alongside the Delete button from Step 13).
@@ -425,4 +445,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Deletion (Steps 13-14) and tagging (Step 15) are done. Remaining native-independent candidates: local export of a swing's source video (MVP item 22 — "annotated" export needs overlay data that doesn't exist until Phase 2, so this would really just be exporting the raw source video for now, e.g. via the OS share sheet); side-by-side swing comparison (MVP item 20 — bigger scope, needs a two-swing-picker UI and a synchronized playback view); the tab-bar icon gap from Step 12 (needs an icon-library decision first); or PRD 9.8's remaining pieces (optional undo period, storage-size estimate in the delete confirmation). A physical device is still the real unblock for camera capture, permission prompts, and pose-model benchmarking (ADR 0009) — simulators/emulators have no camera.
+PRD 9.8 (delete behavior) is now essentially complete except the optional undo period. Remaining native-independent candidates: local export of a swing's source video (MVP item 22 — real export, via the OS share sheet); side-by-side swing comparison (MVP item 20 — bigger scope, needs a two-swing-picker UI and a synchronized playback view); or the tab-bar icon gap from Step 12 (needs an icon-library decision first). A physical device is still the real unblock for camera capture, permission prompts, and pose-model benchmarking (ADR 0009) — simulators/emulators have no camera.

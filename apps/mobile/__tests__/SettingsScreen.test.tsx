@@ -4,12 +4,13 @@
 
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import { Alert } from 'react-native';
-import { exists, unlink } from '@dr.pogodin/react-native-fs';
+import { exists, readDir, unlink } from '@dr.pogodin/react-native-fs';
 import { SettingsScreen } from '../src/screens/SettingsScreen';
 import { useProfileStore } from '../src/state/profileStore';
 
 const mockedUnlink = unlink as jest.Mock;
 const mockedExists = exists as jest.Mock;
+const mockedReadDir = readDir as jest.Mock;
 
 const profile = {
   handedness: 'right' as const,
@@ -58,6 +59,56 @@ describe('SettingsScreen', () => {
     // Both the swings root and the profile file get unlinked.
     expect(mockedUnlink).toHaveBeenCalledTimes(2);
     expect(useProfileStore.getState().profile).toBeNull();
+
+    alertSpy.mockRestore();
+  });
+
+  it('shows the estimated storage to be freed in the confirmation', async () => {
+    useProfileStore.setState({ status: 'loaded', profile });
+    mockedReadDir.mockImplementation(async (path: string) => {
+      if (path === '/mock/documents/swings') {
+        return [
+          {
+            path: '/mock/documents/swings/swing-1',
+            name: 'swing-1',
+            size: 0,
+            mtime: null,
+            ctime: null,
+            isDirectory: () => true,
+            isFile: () => false,
+          },
+        ];
+      }
+      return [
+        {
+          path: `${path}/source.mp4`,
+          name: 'source.mp4',
+          size: 3 * 1024 * 1024,
+          mtime: null,
+          ctime: null,
+          isDirectory: () => false,
+          isFile: () => true,
+        },
+      ];
+    });
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await act(async () => {
+      tree = ReactTestRenderer.create(<SettingsScreen />);
+    });
+
+    await act(async () => {
+      await tree!.root
+        .findByProps({ testID: 'delete-all-data-button' })
+        .props.onPress();
+    });
+
+    expect(alertSpy).toHaveBeenCalledWith(
+      'Delete all data?',
+      expect.stringContaining('3.0 MB'),
+      expect.anything(),
+    );
 
     alertSpy.mockRestore();
   });
