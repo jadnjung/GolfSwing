@@ -1,0 +1,33 @@
+# Professional swing comparison: published-benchmark approach
+
+Phase 4 deliverable (`docs/PRD.md` sections 4.4, 5.9, Phase 4 "Professional comparison"), pulled forward as desk research since PRD section 22 lists "which professional swing footage can be licensed" as an open, unresolved product decision. This report answers a narrower, related question: **can professional swing video be scraped from the internet for this feature?** No — and it proposes a lower-risk alternative that doesn't wait on that licensing question at all.
+
+## Why scraping video isn't an option
+
+PRD 5.9 states professional reference swings "must be... properly licensed" as a hard requirement, not a preference. Video of a named professional golfer's swing — whether from broadcast footage, YouTube, or an instructional site — is copyrighted content, and using a real person's likeness in a commercial coaching product raises publicity-rights issues independent of copyright. Downloading and redistributing it inside this app isn't a gray area to engineer around; it needs an actual license from whoever owns the footage (a broadcaster, a tour, an instructor, or the golfer themselves), which is exactly the open business decision PRD 22 item 7 is waiting on.
+
+## A lower-risk alternative: compare against published research benchmarks, not video
+
+Peer-reviewed golf biomechanics research already publishes exactly the kind of quantitative benchmarks PRD 5.3's joint-angle/metric system and PRD 5.9's "normalized measurements rather than direct pixel positions" call for — and several key papers are published under **CC BY** (Creative Commons Attribution), meaning the data is legally reusable with citation, a fundamentally different (and much lower-risk) category than redistributing copyrighted video.
+
+Concrete benchmarks found (each figure traceable to its source paper, not just quoted secondhand):
+
+- **X-Factor (hip-shoulder separation at the top of the backswing)**: ~42-48° for tour professionals (Titleist Performance Institute's commonly cited 42° figure; a 2022 systematic review reports ~48° via 2D measurement), versus 54-58° for recreational golfers — professionals show *less* separation than amateurs in this dataset, a genuinely counter-intuitive, citation-worthy finding (Bell et al., "Golf Swing Biomechanics: A Systematic Review and Methodological Recommendations for Kinematics," *Sports* 2022, CC BY, [MDPI](https://www.mdpi.com/2075-4663/10/6/91) / [PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC9227529/)).
+- **Kinematic sequence** (the proximal-to-distal rotational firing order: pelvis peaks first, then torso, then arm, then club): named as the theoretically optimal pattern, but the same review notes it's "rarely been verified" even in skilled amateurs — a useful caveat for feedback-rule copy, not just a number to hit.
+- **Downswing tempo**: professional males ~0.31 ± 0.04s, recreational males ~0.25 ± 0.02s (driver) — professionals take longer in transition, not shorter, another counter-intuitive number worth surfacing to users rather than assuming "faster is better."
+- **Clubhead speed at impact (driver)**: professional males ~50.1 ± 2.1 m/s, skilled amateurs ~45.4 ± 3.6 m/s.
+- **Hip and shoulder rotation reference values** (elite golfers): hip internal/external rotation ~50° lead side / ~40° trail side; shoulder elevation ~100° lead side / ~13° trail side.
+- **Rotational velocities** (pelvis/upper-torso/relative "X-prime" peak angular velocity across downswing, impact, and follow-through), and a composite "Swing Performance Index" shown to separate professionals (100 ± 10) from amateurs (82 ± 4) using three specific velocity features (Wheat et al., "The Swing Performance Index," *Frontiers in Sports and Active Living* 2022, CC BY, [full text](https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2022.986281/full)).
+
+## What this unlocks, and what it doesn't
+
+- **Unlocks now, without waiting on video licensing**: a "how does your swing compare to typical tour-professional ranges" feature using these published numeric ranges as reference bands (e.g., "your X-Factor: 35° — tour range: 42-48°"), computed from this app's own pose pipeline (PRD 5.3) once Phase 2 lands. This satisfies PRD 5.9's "normalized measurements rather than direct pixel positions" requirement directly, and sidesteps the licensing question in PRD 22 entirely, since no professional's video or likeness is used at all — only aggregate statistics from published research, cited to their source.
+- **Does not unlock**: the fuller PRD 5.9 vision of "compare a golfer's swing with approved professional reference swings" as an actual side-by-side video/overlay comparison (already built at the MVP-scope, video-only level — `CompareScreen`, Step 18 — but that's swing-vs-own-swing, not swing-vs-professional). A real video-based professional comparison still needs licensed footage, and remains gated behind PRD 22 item 7's still-open business decision.
+- **Real caveat carried over from every cited paper**: sample sizes are small, methodology varies study-to-study (the 2022 systematic review's own stated limitation), and most published data skews toward right-handed male golfers — publishing a single "tour average" number without that context risks exactly the "pose estimates appear more precise than they are" failure mode PRD 19 Risk 1 already warns about. Any in-app copy using these numbers needs the same confidence/uncertainty framing already required elsewhere (PRD 5.6, 9.6), not presented as a precise target.
+- Per PRD 18's Definition of Done, any feedback rule surfacing these benchmarks still needs golf-domain reviewer approval before shipping — published research numbers reduce legal risk, not the need for that review.
+
+## Recommendation
+
+- Treat this as a genuinely viable, lower-risk path to a "professional benchmark" feature that doesn't need to wait on video-licensing negotiations — worth prioritizing over the fuller video-comparison vision if a "how do I compare to tour pros" feature is wanted sooner rather than later.
+- Still defer actual implementation to Phase 4 (per the roadmap) or whenever Phase 2's pose pipeline exists — these benchmarks are meaningless without real joint-angle/velocity output from this app's own pipeline to compare them against.
+- Before shipping: verify each cited figure directly against its source paper's full methodology (age range, sample size, handedness, camera setup) rather than only the summary reported here, and get explicit sign-off from whoever fills PRD 22 item 14's "initial golf instructor or biomechanics reviewer" role — this document is research to inform that reviewer, not a substitute for their approval.

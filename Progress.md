@@ -6,6 +6,18 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 22:30 KST — Professional swing comparison research
+
+You asked whether professional golfers' swings could be pulled from the internet to compare against a user's swing. Short answer: not as video — PRD 5.9 requires professional reference swings to be "properly licensed," and PRD 22 item 7 ("which professional swing footage can be licensed") is still an open, unresolved business decision, not something to route around technically.
+
+Found a lower-risk alternative instead: peer-reviewed golf biomechanics research publishes real quantitative benchmarks (X-Factor, kinematic sequence, tempo, clubhead speed, joint rotation ranges) for tour professionals versus amateurs, and at least two key papers are CC-BY licensed — legally reusable with citation, a fundamentally different risk category than redistributing copyrighted video or a golfer's likeness. Wrote up the specific figures found, their sources, and what this does/doesn't unlock in `docs/architecture/professional-swing-benchmarks.md`, following the same desk-research pattern as `docs/architecture/ball-tracking-feasibility.md`.
+
+This unlocks a "how do you compare to typical tour-professional ranges" feature using published statistics as reference bands, without waiting on the video-licensing question at all — genuinely different from PRD 5.9's fuller "compare against actual professional swing video" vision, which still needs that licensing resolved. Both still wait on Phase 2's pose pipeline (nothing to compare against yet) and golf-domain reviewer sign-off (PRD 18's Definition of Done) before any of this ships.
+
+Updated `Checklist.md`'s "Professional comparison" item to point at the new doc.
+
+---
+
 ## 2026-08-03 22:00 KST — Pose-inference library research (ADR 0014)
 
 ADR 0009 deferred this decision back when the environment had no network access to actually survey the landscape. Re-checked now that it does — re-surveyed every realistic React Native pose wrapper, not just the one (`react-native-mediapipe`, cdiddy77) ADR 0009 already ruled out for staleness (still 0.6.0, still last published 2024-12-12, unchanged).

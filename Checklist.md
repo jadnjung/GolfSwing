@@ -74,7 +74,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 - [ ] Personalized training plans
 - [ ] Drill library
 - [ ] Advanced feedback
-- [ ] Professional comparison
+- [ ] Professional comparison (desk research done — `docs/architecture/professional-swing-benchmarks.md` proposes comparing against published CC-BY biomechanics research benchmarks instead of licensed video, sidestepping PRD 22 item 7's open video-licensing question; still needs Phase 2's pose pipeline and golf-domain reviewer sign-off before implementation)
 - [ ] Instructor validation
 - [ ] Beginner and advanced modes
 
