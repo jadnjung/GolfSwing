@@ -1,3 +1,5 @@
+import type { Handedness } from "./profile";
+
 // Matches the fields RecordScreen actually writes to analysis-manifest.json
 // today (see apps/mobile/src/screens/RecordScreen.tsx). Not the full PRD
 // section 7.7 Swing model — fields like poseModelVersion or qualityScore get
@@ -16,11 +18,18 @@ export interface Swing {
   frameRate: number;
   durationMs: number;
   analysisStatus: AnalysisStatus;
+  // From the user's profile at record time (docs/architecture/
+  // swing-angle-definitions.md's "Open gaps" section: several PRD 5.3
+  // metrics like lead/trail elbow are undefined without it).
+  handedness: Handedness;
 }
 
-const CLUB_TYPES: readonly ClubType[] = ["driver", "iron", "wedge", "putter"];
+// Exported for packages/domain/src/profile.ts's primaryClub validation —
+// one club-type vocabulary, not two independently maintained lists.
+export const CLUB_TYPES: readonly ClubType[] = ["driver", "iron", "wedge", "putter"];
 const CAMERA_VIEWS: readonly CameraView[] = ["down-the-line", "face-on"];
 const CAMERA_POSITIONS: readonly CameraPosition[] = ["front", "back"];
+const HANDEDNESS_VALUES: readonly Handedness[] = ["left", "right"];
 
 export class InvalidSwingManifestError extends Error {
   constructor(reason: string) {
@@ -70,6 +79,9 @@ export function parseSwingManifest(raw: unknown): Swing {
   if (manifest.analysisStatus !== "pending") {
     throw new InvalidSwingManifestError('missing or invalid "analysisStatus"');
   }
+  if (!HANDEDNESS_VALUES.includes(manifest.handedness as Handedness)) {
+    throw new InvalidSwingManifestError('missing or invalid "handedness"');
+  }
 
   return {
     id: manifest.id,
@@ -80,5 +92,6 @@ export function parseSwingManifest(raw: unknown): Swing {
     frameRate: manifest.frameRate,
     durationMs: manifest.durationMs,
     analysisStatus: "pending",
+    handedness: manifest.handedness as Handedness,
   };
 }

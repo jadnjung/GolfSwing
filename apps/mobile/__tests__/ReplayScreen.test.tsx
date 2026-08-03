@@ -32,7 +32,7 @@ function findText(
 }
 
 describe('ReplayScreen', () => {
-  it('points the video at the swing\'s source file and shows a loading state', async () => {
+  it("points the video at the swing's source file and shows a loading state", async () => {
     let tree: ReactTestRenderer.ReactTestRenderer;
     await act(async () => {
       tree = ReactTestRenderer.create(

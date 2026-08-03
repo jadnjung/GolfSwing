@@ -9,9 +9,9 @@ Phase 2 (Pose Analysis MVP) starts with pose inference (`native/ios-pose-inferen
 
 Checked the realistic options for actually getting a pose model running from React Native:
 
-- **`@mediapipe/tasks-vision`** — this is MediaPipe's *web/WASM* package, meant for browser use. It has no native iOS/Android binding; using it in React Native would mean running a WASM pose model instead of MediaPipe's real native (Core ML / NNAPI-accelerated) task runtime, which defeats the point of on-device native inference PRD section 7.1 calls for.
+- **`@mediapipe/tasks-vision`** — this is MediaPipe's _web/WASM_ package, meant for browser use. It has no native iOS/Android binding; using it in React Native would mean running a WASM pose model instead of MediaPipe's real native (Core ML / NNAPI-accelerated) task runtime, which defeats the point of on-device native inference PRD section 7.1 calls for.
 - **`react-native-mediapipe`** (cdiddy77) — the one existing React Native wrapper around MediaPipe's native Tasks API, built on `react-native-vision-camera` frame processors (which this repo already uses, per ADR 0004). But its last release was **2024-12-12** — over 19 months stale relative to this project's timeline — across only 7 total releases, from a single maintainer, with no visible activity since. That maintenance profile is well below the bar every other native dependency in this repo has cleared (vision-camera, `@dr.pogodin/react-native-fs`, `react-native-video` — all chosen specifically for active, multi-release maintenance per ADRs 0004/0005/0007).
-- Hand-written native modules calling Core ML / Vision (iOS) and NNAPI/TensorFlow Lite (Android) directly — the most control, but the largest amount of genuinely new native code in this project so far, entirely unverifiable without a working device build, and exactly the kind of decision Phase 0's "Pose-model benchmark" deliverable exists to de-risk *before* committing.
+- Hand-written native modules calling Core ML / Vision (iOS) and NNAPI/TensorFlow Lite (Android) directly — the most control, but the largest amount of genuinely new native code in this project so far, entirely unverifiable without a working device build, and exactly the kind of decision Phase 0's "Pose-model benchmark" deliverable exists to de-risk _before_ committing.
 
 ## Decision
 

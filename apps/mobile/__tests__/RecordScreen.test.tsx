@@ -11,6 +11,23 @@ import {
 } from 'react-native-vision-camera';
 import { mkdir, moveFile, writeFile } from '@dr.pogodin/react-native-fs';
 import { RecordScreen } from '../src/screens/RecordScreen';
+import { useProfileStore } from '../src/state/profileStore';
+
+// RecordScreen reads handedness from the profile store, non-null, on the
+// assumption RootNavigator never mounts it without one (App.tsx). Seed
+// that invariant for every test in this file.
+beforeEach(() => {
+  useProfileStore.setState({
+    status: 'loaded',
+    profile: {
+      handedness: 'right',
+      skillLevel: 'beginner',
+      primaryClub: 'driver',
+      units: 'imperial',
+      privacyAcknowledgedAt: '2026-08-03T00:00:00.000Z',
+    },
+  });
+});
 
 const mockedCamera = Camera as unknown as {
   getCameraPermissionStatus: jest.Mock;
@@ -146,6 +163,10 @@ describe('RecordScreen recording flow', () => {
     expect(mockedWriteFile).toHaveBeenCalledWith(
       expect.stringContaining('/analysis-manifest.json'),
       expect.stringContaining('"analysisStatus": "pending"'),
+    );
+    expect(mockedWriteFile).toHaveBeenCalledWith(
+      expect.stringContaining('/analysis-manifest.json'),
+      expect.stringContaining('"handedness": "right"'),
     );
     expect(existsByTestId(tree!, 'save-confirmation')).toBe(true);
   });

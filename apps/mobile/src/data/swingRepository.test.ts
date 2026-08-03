@@ -29,6 +29,7 @@ const olderManifest = {
   frameRate: 30,
   durationMs: 3000,
   analysisStatus: 'pending',
+  handedness: 'right',
 };
 
 const newerManifest = {
@@ -40,6 +41,7 @@ const newerManifest = {
   frameRate: 60,
   durationMs: 4000,
   analysisStatus: 'pending',
+  handedness: 'right',
 };
 
 describe('swingVideoPath', () => {

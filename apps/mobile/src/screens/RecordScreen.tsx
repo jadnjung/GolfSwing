@@ -12,6 +12,7 @@ import {
   moveFile,
   writeFile,
 } from '@dr.pogodin/react-native-fs';
+import { OptionRow } from '../components/OptionRow';
 import { colors, spacing } from '../theme/theme';
 import {
   useRecordingSetupStore,
@@ -20,6 +21,7 @@ import {
   type ClubType,
   type FrameRate,
 } from '../state/recordingSetupStore';
+import { useProfileStore } from '../state/profileStore';
 
 const CLUBS: ClubType[] = ['driver', 'iron', 'wedge', 'putter'];
 const CAMERA_VIEWS: CameraViewOption[] = ['down-the-line', 'face-on'];
@@ -39,45 +41,6 @@ function createSwingId(): string {
     return value.toString(16);
   });
   /* eslint-enable no-bitwise */
-}
-
-function OptionRow<T extends string | number>({
-  label,
-  options,
-  selected,
-  onSelect,
-}: {
-  label: string;
-  options: T[];
-  selected: T;
-  onSelect: (value: T) => void;
-}) {
-  return (
-    <View style={styles.row}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <View style={styles.optionGroup}>
-        {options.map(option => (
-          <Pressable
-            key={option}
-            onPress={() => onSelect(option)}
-            style={[
-              styles.option,
-              option === selected && styles.optionSelected,
-            ]}
-          >
-            <Text
-              style={[
-                styles.optionText,
-                option === selected && styles.optionTextSelected,
-              ]}
-            >
-              {option}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-    </View>
-  );
 }
 
 export function RecordScreen() {
@@ -109,6 +72,10 @@ export function RecordScreen() {
   } = useRecordingSetupStore();
 
   const device = useCameraDevice(cameraPosition);
+
+  // Non-null: RootNavigator only mounts once onboarding has produced a
+  // profile (App.tsx), so RecordScreen is never reachable without one.
+  const handedness = useProfileStore(state => state.profile!.handedness);
 
   const requestCameraAccess = useCallback(async () => {
     const result = await Camera.requestCameraPermission();
@@ -146,6 +113,7 @@ export function RecordScreen() {
           frameRate,
           durationMs: Math.round(video.duration * 1000),
           analysisStatus: 'pending' as const,
+          handedness,
         };
         await writeFile(
           `${swingDir}/analysis-manifest.json`,
@@ -161,7 +129,7 @@ export function RecordScreen() {
         setCaptureStage('error');
       }
     },
-    [club, cameraView, cameraPosition, frameRate],
+    [club, cameraView, cameraPosition, frameRate, handedness],
   );
 
   const startRecording = useCallback(() => {

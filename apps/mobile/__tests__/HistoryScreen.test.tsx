@@ -79,6 +79,7 @@ describe('HistoryScreen', () => {
         frameRate: 60,
         durationMs: 4200,
         analysisStatus: 'pending',
+        handedness: 'right',
       }),
     );
 
@@ -117,6 +118,7 @@ describe('HistoryScreen', () => {
         frameRate: 60,
         durationMs: 4200,
         analysisStatus: 'pending',
+        handedness: 'right',
       }),
     );
 

@@ -45,7 +45,11 @@ describe('appendDiagnosticLog', () => {
   it('drops the oldest entries once the cap is exceeded', async () => {
     mockedExists.mockResolvedValue(true);
     const existingLines = Array.from({ length: 500 }, (_, i) =>
-      JSON.stringify({ timestamp: `t${i}`, level: 'info', message: `msg-${i}` }),
+      JSON.stringify({
+        timestamp: `t${i}`,
+        level: 'info',
+        message: `msg-${i}`,
+      }),
     );
     mockedReadFile.mockResolvedValue(`${existingLines.join('\n')}\n`);
 

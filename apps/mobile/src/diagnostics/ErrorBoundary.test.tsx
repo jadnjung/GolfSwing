@@ -80,12 +80,12 @@ describe('ErrorBoundary', () => {
 
     shouldThrow = false;
     await act(async () => {
-      tree!.root.findByProps({ testID: 'error-boundary-retry' }).props.onPress();
+      tree!.root
+        .findByProps({ testID: 'error-boundary-retry' })
+        .props.onPress();
     });
 
-    expect(tree!.root.findAllByType(Text)[0]!.props.children).toBe(
-      'recovered',
-    );
+    expect(tree!.root.findAllByType(Text)[0]!.props.children).toBe('recovered');
 
     consoleError.mockRestore();
   });

@@ -10,6 +10,7 @@ function validManifest() {
     frameRate: 60,
     durationMs: 4200,
     analysisStatus: "pending",
+    handedness: "right",
   };
 }
 
@@ -29,6 +30,7 @@ describe("parseSwingManifest", () => {
     ["negative frameRate", "frameRate", { ...validManifest(), frameRate: -1 }],
     ["negative durationMs", "durationMs", { ...validManifest(), durationMs: -1 }],
     ["wrong analysisStatus", "analysisStatus", { ...validManifest(), analysisStatus: "done" }],
+    ["invalid handedness", "handedness", { ...validManifest(), handedness: "both" }],
   ])("rejects a manifest with %s", (_description, _field, malformed) => {
     expect(() => parseSwingManifest(malformed)).toThrow(InvalidSwingManifestError);
   });

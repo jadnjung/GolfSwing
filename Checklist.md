@@ -22,14 +22,14 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 ## Phase 0: Product and Technical Discovery (PRD 16)
 
-- [ ] Final product scope (several PRD section 22 decisions still open, e.g. min Android API level as a *product* choice, subscription price, free-tier limits)
+- [ ] Final product scope (several PRD section 22 decisions still open, e.g. min Android API level as a _product_ choice, subscription price, free-tier limits)
 - [x] Supported device matrix (`docs/qa/device-matrix.md` — capability tiers and minimum OS versions defined; physical device acquisition/testing itself still pending, see the doc's own caveats)
 - [ ] Camera proof of concept (needs a real device — blocked, see `docs/adr/0009-defer-pose-inference-library.md`)
 - [ ] Pose-model benchmark (needs a real device — same blocker)
 - [x] Ball-tracking feasibility report (`docs/architecture/ball-tracking-feasibility.md` — desk assessment against PRD 5.6's four levels; no measured accuracy, since that needs real recorded footage)
 - [x] Swing-angle definitions (`docs/architecture/swing-angle-definitions.md` — maps every PRD 5.3 measurement to specific landmarks/formulas; surfaced that handedness isn't captured anywhere in the app yet)
 - [ ] Golf-instructor review (needs a real domain-expert reviewer — not something this agent can substitute for)
-- [ ] Privacy architecture (drafted in PRD section 9; not yet built as an in-app flow)
+- [x] Privacy architecture (drafted in PRD section 9; now built as an in-app flow — `OnboardingScreen`'s privacy notice step, Step 10)
 - [ ] UX prototype (needs real user testing to count as validated, not just a written wireframe)
 - [x] Architecture decision records (ongoing process, `docs/adr/`)
 
@@ -102,7 +102,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 ## MVP scope tracker (PRD 3.1 — the 24-item list, cross-cutting across phases above)
 
-1. [ ] Local user profile
+1. [x] Local user profile (`OnboardingScreen` + `profileStore`/`profileRepository` — handedness, skill level, primary club, units; stored at `<DocumentDirectoryPath>/profile.json` — not build-verified)
 2. [x] Front- or rear-camera selection
 3. [x] Rear-camera default
 4. [ ] Landscape recording mode
@@ -124,5 +124,5 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 20. [ ] Side-by-side comparison with a previous swing
 21. [ ] Local deletion
 22. [ ] Local export of an annotated video
-23. [ ] Privacy and permission screens
+23. [x] Privacy and permission screens (privacy notice in `OnboardingScreen`'s first step; camera/mic permission gate already existed in `RecordScreen`, Step 3)
 24. [x] Crash reporting that does not upload swing videos or pose data (local-only error boundary + diagnostic log; no network path exists at all yet, so nothing uploads anything — external SDK integration deferred, see `docs/adr/0008-crash-handling-scope.md`)
