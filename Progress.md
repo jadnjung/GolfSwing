@@ -599,12 +599,56 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Steps 19-21 closed out every remaining MVP-scope item that turned out to be genuinely buildable without a physical device — tab bar icons, slow-motion playback/frame-by-frame scrubbing, and landscape recording mode (the latter build-verified on a real Android emulator and iOS simulator this session). Two earlier versions of this note misfiled items as "needs a physical device" when they didn't: MVP 17/18 (video playback controls don't touch camera hardware) and MVP 4 (an orientation lock works the same on an emulator/simulator as a device — the physical-device gap is specifically the camera hardware, not the app logic around it).
+**Read this whole section before starting new work in a fresh session** — it's written to be a complete resumption point, not just a hint.
 
-What's left in `Checklist.md`'s MVP tracker now genuinely does need one of two things:
-- **A physical device**: camera/pose permission testing (simulators/emulators have no real camera, and this session's Android emulator camera was itself flaky), wiring the frame-rate selector to a real device format.
-- **Phase 2 analysis data**: skeleton overlay, joint angles, phase detection, feedback, metric deltas, automatic swing-event detection, annotated export — all gated behind the pose-inference library decision, itself deferred pending real-device validation (`docs/adr/0009-defer-pose-inference-library.md`).
+### Where things actually stand (as of commit `2f66492`, 2026-08-03 ~23:00 KST)
 
-Also open: iOS build verification in this environment is capped at "builds and launches" — driving further UI interaction (tapping through screens) needs either a physical device or macOS Accessibility/System Events access, which isn't available here. Android's `adb`-driven taps don't have this limitation.
+Every MVP-scope item that's genuinely buildable without a physical device or Phase 2 pose data is done:
+- Steps 1-18 (earlier sessions): monorepo/toolchain/CI, RN shell, camera capture (`react-native-vision-camera`), local recording/storage/replay, crash handling, per-swing/all-data deletion with storage estimates, swing tagging, local video export (share sheet), side-by-side swing comparison.
+- Step 19 (this session): tab bar icons (`lucide-react-native`, ADR 0012).
+- Step 20 (this session): slow-motion playback + frame-by-frame scrubbing in `ReplayScreen` (`react-native-video`'s `rate`/`seek`, plus `swingRepository.getSwing`).
+- Step 21 (this session): landscape recording mode (`react-native-orientation-locker`, ADR 0013) — build-verified on both a real Android emulator (where a real cross-tab lock-persistence bug was caught and fixed live) and a real iOS simulator (build + launch only, see the iOS UI-automation limitation below).
+- DevOps cleanup (this session): `.github/CODEOWNERS` has the real handle (`@jadnjung`); CI Actions in `.github/workflows/pr-checks.yml` pinned to full commit SHAs.
+- Research, not yet implementable (this session): `docs/adr/0014-pose-inference-shortlist.md` narrows the Phase 2 pose-inference decision to `react-native-fast-tflite` + a vetted BlazePose model (Proposed, not Accepted — still needs real-device benchmarking). `docs/architecture/professional-swing-benchmarks.md` + `packages/analysis-engine/src/professionalBenchmarks.ts` do the same for PRD 5.9's professional-swing-comparison feature, using published CC-BY research instead of licensed video.
 
-This is a genuine pause point, not a place to keep manufacturing native-independent work — worth checking with the user on priority (physical device access vs. Phase 2 planning) before continuing.
+All of the above is committed and pushed to `origin/V1`. `git log --oneline -10` from `2f66492` backward shows the exact sequence. Working tree is clean except `CLAUDE.md`, which has pre-existing unrelated local changes from before this agent started working — **do not touch `CLAUDE.md`**, it's deliberately left alone every session.
+
+### In progress, interrupted mid-task — this is the literal next thing to do
+
+The user has a physical iPhone and an Apple ID available, and confirmed wanting to test the app on it (see the "How could we test it on iPhone" exchange). The plan agreed on:
+
+1. Connect the iPhone to this Mac via USB (or pair it for wireless debugging).
+2. Run `xcrun xctrace list devices` (or check Xcode's Devices & Simulators window) to confirm the Mac sees it and get its device ID — **this is the exact command that was about to run when the user paused the thread to ask a different question ("is there other things we have to do besides testing with a physical device")**. Nothing about the physical-device path was actually blocked — the user just wanted to make sure nothing else was being missed first (answer: CODEOWNERS/CI SHA pinning, pose-inference research, and professional-benchmark research, all of which are now done, per above).
+3. Sign in to Xcode with the Apple ID (Settings → Accounts) — a free "Personal Team" is enough for local installs, no paid Developer Program needed to get started.
+4. Set the `GolfSwingMobile` target's signing to that Personal Team (currently no `DEVELOPMENT_TEAM` is set in `project.pbxproj` — confirmed this session via `grep`).
+5. Build straight to the device: `xcodebuild -workspace ios/GolfSwingMobile.xcworkspace -scheme GolfSwingMobile -configuration Debug -destination 'platform=iOS,id=<device-id>' build`, or just hit Run in Xcode.
+6. First launch will be refused until the user goes to **Settings → General → VPN & Device Management** on the phone and trusts the developer certificate.
+7. Known limitation with a free Apple ID: the install's trust **expires after 7 days** — rebuilding/reinstalling weekly is expected, not a bug, unless a paid account gets added later.
+
+Once on a real device, the genuinely blocked Checklist items (camera/pose permission flows, the frame-rate-to-real-format wiring, actual camera preview/recording end-to-end) become testable for the first time this project has had real camera hardware.
+
+### Everything else still open, and what unblocks each
+
+- **Physical device access** (see above) unblocks: real camera capture/recording verification (Checklist Phase 0 "Camera proof of concept", Phase 1 items still marked not-fully-verified), wiring the frame-rate selector to real device formats (MVP item 5), and eventually Phase 2's actual pose-inference proof of concept (PRD 23 "Proof of concept B").
+- **Phase 2 pose-inference implementation** is still blocked on real-device latency/accuracy benchmarking, not on a decision — `docs/adr/0014-pose-inference-shortlist.md` already picked a leading candidate (`react-native-fast-tflite` + BlazePose) and a documented fallback (hand-written native modules). Once device access exists, the next step is literally running that benchmark, not re-researching libraries.
+- **Golf-instructor / biomechanics reviewer**: still an entirely open role (PRD 22 item 14) — needs a real person, not engineering work. Required before any feedback-rule content ships (PRD 18's Definition of Done), including the professional-benchmark comparison feature.
+- **Product-scope decisions** (PRD section 22, still open, business calls not engineering ones): minimum Android API level as a deliberate choice (vs. just inheriting RN's default of 24), subscription price, free-tier swing-count limit, whether audio is recorded by default, which clubs are supported at launch, whether putting is included, age-16 support, photo-library import, raw pose-measurement export, exact per-metric validation tolerances, encrypted-backup plans, whether professional comparisons ship in-app or as downloadable packages, training-plan launch timing, launch-monitor integration roadmap.
+- **UX prototype validation**: needs real user testing, not just the existing written wireframes/flows.
+
+### Known environment gotchas (so a fresh session doesn't have to rediscover these)
+
+All recorded in detail in `docs/architecture/toolchain.md`'s numbered list — summarized here:
+1. `JAVA_HOME` must point at `~/.jdks/jdk-17.0.20+8/Contents/Home` before running `./gradlew` (not Android Studio's bundled JBR).
+2. The Android emulator AVD `golf-swing-test` already exists — don't recreate it, just `emulator -avd golf-swing-test`.
+3. `pod install`/`bundle exec pod install` needs rbenv's Ruby active: `export PATH="$HOME/.rbenv/shims:$PATH"` before running anything Ruby-related, and confirm with `which ruby` — the system Ruby (2.6.10) can't run the Bundler version this repo's `Gemfile.lock` pins.
+4. The Android emulator's virtual camera can flake out across restarts (real issue hit this session, reproduced with zero app-code changes in between) — don't assume a "no camera available" message on the emulator is a real app bug without also checking `adb logcat` for `CameraValidator`/`CameraX` errors first.
+5. `xcrun simctl` has no tap/touch command, and this environment doesn't have macOS Accessibility access granted for `osascript`/System Events to drive the Simulator UI — iOS verification in this sandboxed environment is capped at install/launch/screenshot, not multi-step interaction. A physical iPhone (see above) doesn't have this limitation.
+6. This session's git identity is `user.name="Jadn"`, `user.email="jadenjung1004@gmail.com"` (global `~/.gitconfig`, already fixed — if commits ever show a different author again, that's the thing to check).
+
+### Standing permissions already granted by the user (no need to re-ask)
+
+- All bash/git commands scoped to this project directory are pre-approved, including `git commit`.
+- Simulator/emulator can be started and stopped freely as part of build verification.
+- General instruction across this whole session has been "keep picking, no need to ask" for follow-on work once a task completes — still in effect unless the user says otherwise in a new session.
+
+This is a genuine pause point on autonomous engineering work — everything native-independent is done, everything else genuinely needs either the physical device (in progress, see above) or a human decision/reviewer this agent can't substitute for.
