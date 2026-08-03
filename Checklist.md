@@ -45,7 +45,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 - [x] Local video storage (countdown → record → save to `<DocumentDirectoryPath>/swings/<id>/source.mp4` + `analysis-manifest.json`, via `@dr.pogodin/react-native-fs` — not build-verified, see below)
 - [x] Replay (`ReplayScreen`, pushed from `HistoryScreen` via a nested stack navigator; `react-native-video` — not build-verified, see below)
 - [x] History (`HistoryScreen` lists saved swings via `swingRepository.listSwings()`, scanning the filesystem — not build-verified, see below)
-- [ ] Crash handling
+- [x] Crash handling (`ErrorBoundary` + global JS error handler + rotating local diagnostic log; external crash-reporting SDK deliberately deferred to Phase 6, see `docs/adr/0008-crash-handling-scope.md`)
 - [x] CI pipeline
 
 ## Phase 2: Pose Analysis MVP (PRD 16)
@@ -125,4 +125,4 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 21. [ ] Local deletion
 22. [ ] Local export of an annotated video
 23. [ ] Privacy and permission screens
-24. [ ] Crash reporting that does not upload swing videos or pose data
+24. [x] Crash reporting that does not upload swing videos or pose data (local-only error boundary + diagnostic log; no network path exists at all yet, so nothing uploads anything — external SDK integration deferred, see `docs/adr/0008-crash-handling-scope.md`)

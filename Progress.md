@@ -6,6 +6,40 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 12:20 KST — Step 7: Crash handling
+
+Scoped per `docs/adr/0008-crash-handling-scope.md`: build what can actually be delivered responsibly in this environment (no way to create a real crash-reporting vendor account or review its data practices from here), defer the rest to Phase 6 with the reasoning on record rather than silently skipping it or faking a placeholder SDK integration.
+
+**Built**, all under `apps/mobile/src/diagnostics/`:
+
+- `diagnosticLog.ts`: `appendDiagnosticLog`/`readDiagnosticLog` against `<DocumentDirectoryPath>/logs/diagnostics.log` (PRD 7.6 already reserved `logs/` for this). Rotates by rewriting the whole file capped at 500 entries — simple and correct at this scale, avoiding partial-append edge cases. Write failures are caught and `console.warn`ed rather than thrown: this is itself the error-handling path, and a broken log must never mask the original error. Callers only ever pass an error's `message`/`stack`, never video/pose/notes data (PRD 14.1's exclusion list).
+- `ErrorBoundary.tsx`: a class component (React error boundaries require lifecycle methods, no hook equivalent exists) catching render-time errors anywhere below it, logging via `diagnosticLog`, and rendering a "Something went wrong" fallback with a "Try again" button instead of leaving the app white-screened.
+- `installGlobalErrorHandler.ts`: wraps (not replaces) React Native's own `ErrorUtils.setGlobalHandler`, catching fatal errors thrown outside React's render tree (async callbacks, event handlers) that `ErrorBoundary` structurally cannot see, then still calls through to whatever handler was previously installed (dev redbox, future native crash reporting).
+- `App.tsx`: wraps `<NavigationContainer>` in `<ErrorBoundary>`; `installGlobalErrorHandler()` runs once at module scope so it's active before the first screen mounts.
+
+**Bugs caught by `tsc`, both fixed:**
+
+- `global` isn't a recognized identifier under this repo's strict TS config (no `@types/node`, no DOM lib) — switched to `globalThis`, which is standard-library and needs no extra types.
+- `exactOptionalPropertyTypes: true` (root `tsconfig.base.json`) rejects assigning `stack: string | undefined` to an optional `stack?: string` field — fixed by conditionally spreading the property in rather than assigning `undefined` to it, in both `ErrorBoundary.componentDidCatch` and `installGlobalErrorHandler`.
+
+**Testing:** `diagnosticLog.test.ts` (new-file write, append, rotation at the 500-entry cap, and that a write failure doesn't throw); `ErrorBoundary.test.tsx` (renders children normally; a throwing child triggers the fallback and logs; "Try again" recovers once the underlying error condition clears); `installGlobalErrorHandler.test.ts` (no-op when `ErrorUtils` is absent — true in this Jest environment, RN's preset doesn't install one; logs and still calls the previous handler when present, using a manual `globalThis.ErrorUtils` stand-in). Extended the `@dr.pogodin/react-native-fs` Jest mock with `exists`.
+
+**Bugs caught while writing tests, both fixed:**
+
+- Same `findAllByProps` double-match issue hit in Step 3 (matches both the composite element and its underlying host node) — switched the fallback-rendered assertion to `.length > 0` instead of an exact count.
+- The global-handler test's `await Promise.resolve()` (x2) wasn't enough to flush `appendDiagnosticLog`'s several chained `await`s before asserting — replaced with a macrotask flush (`await new Promise<void>(resolve => setImmediate(resolve))`), which reliably drains all pending microtasks first.
+
+**Full workspace validation passed:** `pnpm lint`, `pnpm typecheck`, `pnpm test` (8 mobile suites, 24 tests, plus domain/tooling-smoke-test), `pnpm doctor`.
+
+**Environment note, unrelated to this step's code:** `pnpm doctor` now reports **Xcode 26.6 present** on this machine (previously MISSING) — but its license hasn't been accepted (`sudo xcodebuild -license`, an interactive/sudo step outside this agent's scope). `/usr/bin/git` itself is gated behind that same license and failed outright; commits in this and future sessions use `/Library/Developer/CommandLineTools/usr/bin/git` instead, which works unaffected. Once the license is accepted, real iOS build verification may finally be possible — flagging for a human to action, not doing it silently.
+
+**Known open items:**
+
+- Crash handling is still not build-verified (same caveat as everything native-adjacent).
+- The user-facing "generate a support package" flow (PRD 14.2, share the diagnostic log via the OS share sheet) and an actual crash-reporting SDK (PRD 14.1) are explicitly deferred to Phase 6 — see `docs/adr/0008-crash-handling-scope.md`.
+- RecordScreen's existing error paths (save failure, `onRecordingError`) still only show an on-screen message; they don't yet also write to `diagnosticLog`. Left alone to keep this step's diff scoped to the crash-handling infrastructure itself — worth wiring up as a small follow-up.
+- Phase 1: Recording Foundation is now functionally complete (every deliverable checked except "Native camera modules," which ADR 0004 already superseded with `react-native-vision-camera`). Next real milestone is Phase 2: Pose Analysis MVP — starting with a pose-inference library/model decision, mirroring how Step 3 approached camera capture.
+
 ## 2026-08-03 11:45 KST — Step 6: Replay (video playback of a saved swing)
 
 Scoped to Replay only, per the plan left at the end of Step 5 — a video-playback library decision, plus enough navigation to actually reach a saved swing's video from History.
@@ -200,4 +234,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Step 7 (not started): Crash handling — the last unchecked Phase 1: Recording Foundation deliverable. Once that's done, Phase 1 is functionally complete (modulo build verification) and work moves to Phase 2: Pose Analysis MVP. Real device/build verification for everything camera- and video-related is still blocked on Xcode/Android Studio being installed.
+Step 8 (not started): Begin Phase 2: Pose Analysis MVP with a pose-inference library/model decision (PRD section 8, 5.2 — MediaPipe is the PRD's suggested starting candidate, needs validating against current iOS/Android support before locking it in). Real device/build verification for everything camera-, video-, and (soon) pose-related is still blocked on Android Studio being installed and the local Xcode license being accepted (`sudo xcodebuild -license` — flagged in the 2026-08-03 12:20 KST entry, needs a human with sudo).

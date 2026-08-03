@@ -89,4 +89,5 @@ jest.mock('@dr.pogodin/react-native-fs', () => ({
   writeFile: jest.fn(async () => {}),
   readDir: jest.fn(async () => []),
   readFile: jest.fn(async () => '{}'),
+  exists: jest.fn(async () => false),
 }));
