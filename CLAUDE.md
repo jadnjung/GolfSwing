@@ -155,6 +155,7 @@ After every completed task:
 2. Run validation.
 3. Fix issues.
 4. Create a descriptive Git commit.
+5. Push the commit to the configured remote branch.
 
 Commit messages should clearly describe what changed.
 
@@ -171,7 +172,9 @@ Never rewrite Git history.
 
 Never force push.
 
-Never push to a remote repository unless explicitly instructed.
+Before pushing, verify that the commit was created successfully and that the current branch is tracking the correct remote branch.
+
+If the push fails, report the error clearly and do not use force push to resolve it.
 
 ---
 
