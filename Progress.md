@@ -6,6 +6,32 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 18:55 KST — Step 18: Side-by-side swing comparison
+
+Picked from the candidates left after Step 17: side-by-side comparison (MVP item 20) over the tab-bar icon gap — the largest remaining MVP-checklist gap, versus a cosmetic fix.
+
+**Scope decision:** PRD 4.4's fuller comparison vision (phase-synchronized playback, skeleton/angle overlays, metric deltas, ghost overlay, saved comparison sessions) all need swing-phase timestamps and pose/metric data that don't exist until Phase 2. Built the honest MVP-item-20-sized version instead: pick two swings, play them independently side by side (stacked vertically — a phone's portrait aspect makes a true horizontal split too narrow to be useful). Recorded this scope boundary directly in `CompareScreen.tsx`'s own comment, not just here, so it's visible to whoever picks up Phase 3's fuller version later.
+
+**Navigation:** extended `HistoryStackParamList` with two new routes — `SelectComparisonSwing: { firstSwingId }` and `Compare: { swingIdA, swingIdB }` — added to the existing `HistoryStackNavigator` alongside `HistoryList`/`Replay`.
+
+**Built:**
+
+- `HistoryScreen`'s row actions gained a "Compare" button (alongside Tags/Delete from Steps 13/15) that navigates to `SelectComparisonSwing` with the tapped swing's id.
+- `SelectComparisonSwingScreen`: reuses `swingRepository.listSwings()`, filters out the first swing, and navigates to `Compare` with both ids when a candidate is tapped.
+- `CompareScreen`: two independent `<Video controls>` players (reusing the same `react-native-video` dependency and loading/error pattern as `ReplayScreen`), each tracking its own playback state — one video failing to load doesn't affect the other.
+
+**Bug caught by a failing test, not by inspection:** the internal `ComparisonVideo` component initially received a prop literally named `testID` (used both to identify the wrapper and to pass through to the inner `<Video>`). `findByProps({testID: 'compare-video-a'})` in the test then matched *four* elements — the `ComparisonVideo` component itself (which has that prop but no `.source`, since it's the wrapper, not the video), the `Video` mock, and its rendered `View` (composite + host, the familiar double-match pattern from earlier steps) — and grabbed the wrong one first, since `ComparisonVideo`'s own props happened to match too. Fixed by renaming the wrapper's prop to `videoTestID`, so only the actual `<Video testID={...}>` element carries that identifying prop.
+
+**Testing:** new `SelectComparisonSwingScreen.test.tsx` (excludes the first swing from candidates; shows a message when there's nothing else to compare with; navigates to `Compare` with both ids) and `CompareScreen.test.tsx` (each video points at its own swing's file; loading/error states track independently per side). Extended `HistoryScreen.test.tsx` with a case asserting the Compare button navigates correctly.
+
+**Full workspace validation passed:** `pnpm lint`, `pnpm typecheck`, `pnpm test` (71 tests now, up from 65).
+
+**Known open items:**
+
+- Not build-verified on a real simulator/emulator (both shut down before Step 13, per your instruction).
+- No phase synchronization, overlays, or metric deltas — genuinely blocked on Phase 2 pose/analysis data, not a scope choice that could be closed with more UI work now.
+- The tab-bar icon gap from Step 12 is still the main remaining open item outside Phase 2's own blockers.
+
 ## 2026-08-03 18:30 KST — Step 17: Local video export
 
 Picked from the candidates left after Step 16: local export (MVP item 22) over side-by-side comparison (bigger scope, needs a two-swing picker and synchronized playback) and the tab-bar icon gap (needs an icon-library decision, lower value than a real MVP checklist item).
@@ -465,4 +491,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Local export (Step 17) is done (source video only — annotated export waits on Phase 2). Remaining native-independent candidates: side-by-side swing comparison (MVP item 20 — the largest remaining MVP gap, needs a two-swing-picker UI and a synchronized playback view); or the tab-bar icon gap from Step 12 (needs an icon-library decision first, lower value than a real MVP item). A physical device is still the real unblock for camera capture, permission prompts, and pose-model benchmarking (ADR 0009) — simulators/emulators have no camera.
+Every MVP-scope item (PRD 3.1's 24-item list) that's genuinely buildable without a physical device or Phase 2 pose data is now done. What's left in `Checklist.md`'s MVP tracker either needs a physical device (camera/pose items), Phase 2 analysis data (skeleton overlay, joint angles, phase detection, feedback, metric deltas), or is a smaller polish item (the tab-bar icon gap from Step 12, landscape recording mode, wiring the frame-rate selector to an actual device format). Worth checking with the user on priority: continue with polish items, or treat this as a natural pause point for Phase 1/thin-Phase-2 work and wait for real device access.

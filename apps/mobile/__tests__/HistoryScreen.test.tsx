@@ -130,6 +130,27 @@ describe('HistoryScreen', () => {
     });
   });
 
+  it('navigates to SelectComparisonSwing when Compare is tapped', async () => {
+    mockOneSavedSwing();
+
+    const props = mockNavigationProps();
+    await act(async () => {
+      tree = ReactTestRenderer.create(<HistoryScreen {...props} />);
+    });
+
+    const [compareButton] = tree!.root.findAllByProps({
+      testID: 'compare-swing-button',
+    });
+    await act(async () => {
+      compareButton!.props.onPress();
+    });
+
+    expect(props.navigation.navigate).toHaveBeenCalledWith(
+      'SelectComparisonSwing',
+      { firstSwingId: 'swing-1' },
+    );
+  });
+
   it('shows the estimated storage to be freed in the delete confirmation', async () => {
     mockedReadDir.mockImplementation(async (path: string) => {
       if (path === '/mock/documents/swings') {

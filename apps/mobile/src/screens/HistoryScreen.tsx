@@ -40,11 +40,13 @@ function SwingRow({
   onPress,
   onDelete,
   onEditTags,
+  onCompare,
 }: {
   swing: Swing;
   onPress: () => void;
   onDelete: () => void;
   onEditTags: () => void;
+  onCompare: () => void;
 }) {
   return (
     <View style={styles.row} testID="swing-row">
@@ -72,6 +74,13 @@ function SwingRow({
       <View style={styles.rowActions}>
         <Pressable onPress={onEditTags} hitSlop={8} testID="edit-tags-button">
           <Text style={styles.actionText}>Tags</Text>
+        </Pressable>
+        <Pressable
+          onPress={onCompare}
+          hitSlop={8}
+          testID="compare-swing-button"
+        >
+          <Text style={styles.actionText}>Compare</Text>
         </Pressable>
         <Pressable onPress={onDelete} hitSlop={8} testID="delete-swing-button">
           <Text style={styles.deleteText}>Delete</Text>
@@ -247,6 +256,11 @@ export function HistoryScreen({ navigation }: Props) {
               }
               onDelete={() => confirmDelete(item)}
               onEditTags={() => setEditingSwing(item)}
+              onCompare={() =>
+                navigation.navigate('SelectComparisonSwing', {
+                  firstSwingId: item.id,
+                })
+              }
             />
           )}
           style={styles.list}
