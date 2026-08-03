@@ -4,6 +4,7 @@
 
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import { Text } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import {
   Camera,
   useCameraDevice,
@@ -12,6 +13,17 @@ import {
 import { mkdir, moveFile, writeFile } from '@dr.pogodin/react-native-fs';
 import { RecordScreen } from '../src/screens/RecordScreen';
 import { useProfileStore } from '../src/state/profileStore';
+
+// RecordScreen renders standalone here (no real NavigationContainer/Screen
+// wrapping it), so useIsFocused would otherwise throw looking for navigation
+// context it doesn't have. Defaults to focused; the orientation-lock test
+// below overrides it to false.
+jest.mock('@react-navigation/native', () => ({
+  ...jest.requireActual('@react-navigation/native'),
+  useIsFocused: jest.fn(() => true),
+}));
+
+const mockedUseIsFocused = useIsFocused as jest.Mock;
 
 // RecordScreen reads handedness from the profile store, non-null, on the
 // assumption RootNavigator never mounts it without one (App.tsx). Seed
@@ -61,6 +73,10 @@ function existsByTestId(
 describe('RecordScreen', () => {
   afterEach(() => {
     jest.clearAllMocks();
+    // clearAllMocks doesn't reset mockReturnValue overrides — restore the
+    // module mock's default so a false override in one test can't leak into
+    // the next.
+    mockedUseIsFocused.mockReturnValue(true);
   });
 
   it('shows a permission gate before camera access is granted, then the preview once granted', async () => {
@@ -93,6 +109,47 @@ describe('RecordScreen', () => {
     expect(mockedCamera.requestCameraPermission).toHaveBeenCalledTimes(1);
     expect(findText(tree!, 'Grant camera access')).toHaveLength(0);
     expect(existsByTestId(tree!, 'camera-preview-wrapper')).toBe(true);
+  });
+
+  it('locks to landscape while the camera is ready and this tab is focused', async () => {
+    mockedCamera.getCameraPermissionStatus.mockReturnValue('granted');
+    mockedUseCameraDevice.mockReturnValue({
+      id: 'mock-device',
+    } as unknown as CameraDevice);
+
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    act(() => {
+      tree = ReactTestRenderer.create(<RecordScreen />);
+    });
+
+    expect(
+      tree!.root.findByProps({ testID: 'orientation-locker' }).props
+        .orientation,
+    ).toBe('LANDSCAPE');
+  });
+
+  it('explicitly unlocks (not just unmounts) once this tab loses focus', async () => {
+    mockedCamera.getCameraPermissionStatus.mockReturnValue('granted');
+    mockedUseCameraDevice.mockReturnValue({
+      id: 'mock-device',
+    } as unknown as CameraDevice);
+    mockedUseIsFocused.mockReturnValue(false);
+
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    act(() => {
+      tree = ReactTestRenderer.create(<RecordScreen />);
+    });
+
+    // Bottom-tab navigators keep this screen mounted when another tab is
+    // focused (docs/adr/0013), and this library only auto-unlocks when a
+    // mounted locker explicitly requests UNLOCK — an unmounted locker
+    // wouldn't release a lock at all. The camera preview itself still shows
+    // (permission/device are unrelated to tab focus).
+    expect(existsByTestId(tree!, 'camera-preview-wrapper')).toBe(true);
+    expect(
+      tree!.root.findByProps({ testID: 'orientation-locker' }).props
+        .orientation,
+    ).toBe('UNLOCK');
   });
 });
 

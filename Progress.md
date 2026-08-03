@@ -6,6 +6,28 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 21:00 KST — Step 21: Landscape recording mode
+
+Closes MVP item 4 (PRD 3.1) and PRD 2.4's "portrait navigation, landscape swing recording." Checked with the user first since this needed a new native dependency and native iOS/Android config in the same category that needed real build verification in Steps 11-12 — they chose to reactivate the simulator/emulator and verify for real rather than skip verification.
+
+**Library decision:** `react-native-orientation-locker` 1.7.0 — last published 2024-04-20, genuinely stale relative to every other dependency this project has picked (all under a year), but still the most widely used, most issue-tracked option; `expo-screen-orientation` was rejected for the same Expo-coupling reason as ADR 0012, and hand-writing a native module for this would duplicate a narrow, well-solved problem (same reasoning as ADR 0004). Recorded in `docs/adr/0013-landscape-recording-mode.md`.
+
+**Real bugs found through build verification, not anticipated up front:**
+- Bottom-tab navigators keep inactive screens mounted by default — a locker that only mounted inside `RecordScreen`'s active-camera branch stayed mounted (and locked to landscape) even after switching to the Home tab, since `RecordScreen` itself never unmounts on tab change. Caught by literally switching tabs on the Android emulator and watching the screen stay sideways.
+- Fixing that with `useIsFocused()` alone wasn't enough: this library's own `OrientationLocker` only calls `unlockAllOrientations()` when some *other* mounted locker explicitly requests `UNLOCK` — unmounting the last one leaves the Activity's orientation locked forever, since its internal stack-popping logic has no implicit "empty stack means unlocked" case. Fixed by never unmounting the locker at all: it always renders, toggling its `orientation` prop between `LANDSCAPE` and the library's own `UNLOCK` constant based on `isFocused && hasCameraAccess && device != null`.
+
+**Native wiring:** first Swift/Objective-C interop this project has needed — added a bridging header (`ios/GolfSwingMobile/GolfSwingMobile-Bridging-Header.h`) and wired `SWIFT_OBJC_BRIDGING_HEADER` into `project.pbxproj` so `AppDelegate.swift` can call the library's Obj-C `Orientation.getOrientation()`. Android needed `MainActivity.kt` to broadcast `onConfigurationChanged` and `MainApplication.kt` to register `OrientationActivityLifecycle`, per the library's own setup instructions.
+
+**Build verification:**
+- **Android**: `./gradlew assembleDebug` succeeded; installed and ran on a real emulator. First run (before the `useIsFocused`/toggle fix) reproduced the exact persistent-lock bug described above — confirmed live, not by inspection. After the fix, re-verified the lock engages in landscape on the Record tab and (via the "no camera" branch, since the emulator's camera flaked out on later runs — an emulator/CameraX issue unrelated to this change) that `shouldLockLandscape` correctly stays false when its own conditions aren't met.
+- **iOS**: `pod install` (needed `rbenv`'s Ruby 3.3.12, not the system Ruby 2.6.10, for `bundler` 2.7.2) and `xcodebuild` both succeeded, including the new bridging-header wiring. Installed and launched on a real iPhone 17 Pro simulator — onboarding rendered correctly, no crash. Couldn't drive further UI interaction: `xcrun simctl` has no tap/touch command, and the only alternative (macOS Accessibility/System Events) was denied permission in this environment — so the landscape-lock behavior itself isn't visually confirmed on iOS, only that the native module links and the app boots.
+
+**Testing:** extended `__tests__/RecordScreen.test.tsx` with cases for both branches (locks to `LANDSCAPE` when focused+ready, explicitly requests `UNLOCK` — not just unmount — once unfocused), mocking `@react-navigation/native`'s `useIsFocused` since this screen renders standalone in tests without a real `NavigationContainer`. `react-native-orientation-locker`'s Jest mock renders a real (invisible) element with its `orientation` prop exposed, rather than `null`, so tests can assert which orientation was actually requested.
+
+**Validated:** `pnpm --filter mobile lint`, `typecheck`, `test` (79 tests / 14 suites) all passing.
+
+---
+
 ## 2026-08-03 20:05 KST — Step 20: Slow-motion playback and frame-by-frame scrubbing
 
 Closes MVP items 17 and 18 (PRD 5.10). Both had been mis-flagged in the prior "Next up" note as physical-device-blocked — they're not: `react-native-video`'s `rate` prop and imperative `seek()` work the same on a simulator/emulator as on a device, since they only control local file playback, not camera hardware.
@@ -526,10 +548,12 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Steps 19 and 20 closed out every remaining MVP-scope item that turned out to be genuinely buildable without a physical device — including slow-motion playback and frame-by-frame scrubbing (MVP 17/18), which an earlier version of this note incorrectly filed under "needs a physical device" (`react-native-video`'s `rate`/`seek` only touch local file playback, not camera hardware, so they work the same on a simulator/emulator).
+Steps 19-21 closed out every remaining MVP-scope item that turned out to be genuinely buildable without a physical device — tab bar icons, slow-motion playback/frame-by-frame scrubbing, and landscape recording mode (the latter build-verified on a real Android emulator and iOS simulator this session). Two earlier versions of this note misfiled items as "needs a physical device" when they didn't: MVP 17/18 (video playback controls don't touch camera hardware) and MVP 4 (an orientation lock works the same on an emulator/simulator as a device — the physical-device gap is specifically the camera hardware, not the app logic around it).
 
 What's left in `Checklist.md`'s MVP tracker now genuinely does need one of two things:
-- **A physical device**: camera/pose permission testing, landscape recording mode, wiring the frame-rate selector to a real device format — simulators/emulators have no real camera and report synthetic formats.
+- **A physical device**: camera/pose permission testing (simulators/emulators have no real camera, and this session's Android emulator camera was itself flaky), wiring the frame-rate selector to a real device format.
 - **Phase 2 analysis data**: skeleton overlay, joint angles, phase detection, feedback, metric deltas, automatic swing-event detection, annotated export — all gated behind the pose-inference library decision, itself deferred pending real-device validation (`docs/adr/0009-defer-pose-inference-library.md`).
+
+Also open: iOS build verification in this environment is capped at "builds and launches" — driving further UI interaction (tapping through screens) needs either a physical device or macOS Accessibility/System Events access, which isn't available here. Android's `adb`-driven taps don't have this limitation.
 
 This is a genuine pause point, not a place to keep manufacturing native-independent work — worth checking with the user on priority (physical device access vs. Phase 2 planning) before continuing.

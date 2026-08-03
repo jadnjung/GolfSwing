@@ -84,6 +84,26 @@ jest.mock('react-native-video', () => {
   return { __esModule: true, default: MockVideo };
 });
 
+// react-native-orientation-locker is entirely native-backed (a UIKit/Android
+// activity orientation lock). Rendered as a real (invisible) element rather
+// than null so tests can assert whether it's mounted — RecordScreen never
+// reads orientation state back, only mounts/unmounts this declaratively.
+jest.mock('react-native-orientation-locker', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    OrientationLocker: props =>
+      React.createElement(View, {
+        testID: 'orientation-locker',
+        orientation: props.orientation,
+      }),
+    LANDSCAPE: 'LANDSCAPE',
+    PORTRAIT: 'PORTRAIT',
+    UNLOCK: 'UNLOCK',
+  };
+});
+
 // react-native-share ships no Jest mock — its share sheet is entirely
 // native-backed. Tests configure open()'s resolved/rejected value per case
 // (success, user-cancelled, genuine failure).

@@ -105,7 +105,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 1. [x] Local user profile (`OnboardingScreen` + `profileStore`/`profileRepository` — handedness, skill level, primary club, units; stored at `<DocumentDirectoryPath>/profile.json` — build-verified, Step 11: actually persisted through a real onboarding flow on a real iOS simulator)
 2. [x] Front- or rear-camera selection
 3. [x] Rear-camera default
-4. [ ] Landscape recording mode
+4. [x] Landscape recording mode (`RecordScreen`'s camera preview locks to landscape via `react-native-orientation-locker` while this tab is focused and the camera is ready — PRD 2.4/3.1 — `docs/adr/0013-landscape-recording-mode.md`; Android build-verified on a real emulator, iOS builds successfully but tap-driven UI verification wasn't possible in this environment)
 5. [ ] 30/60 FPS recording where supported (selector exists in UI; not yet wired to an actual device format/fps)
 6. [x] Video countdown timer
 7. [x] Manual recording start/stop

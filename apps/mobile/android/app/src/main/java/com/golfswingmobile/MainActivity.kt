@@ -1,5 +1,7 @@
 package com.golfswingmobile
 
+import android.content.Intent
+import android.content.res.Configuration
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
@@ -19,4 +21,14 @@ class MainActivity : ReactActivity() {
    */
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
+
+  // react-native-orientation-locker (docs/adr/0013) listens for this broadcast
+  // to detect orientation changes that AndroidManifest's configChanges keeps
+  // from recreating the activity.
+  override fun onConfigurationChanged(newConfig: Configuration) {
+    super.onConfigurationChanged(newConfig)
+    val intent = Intent("onConfigurationChanged")
+    intent.putExtra("newConfig", newConfig)
+    this.sendBroadcast(intent)
+  }
 }

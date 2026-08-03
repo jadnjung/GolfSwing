@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useIsFocused } from '@react-navigation/native';
 import {
   Camera,
   useCameraDevice,
@@ -13,6 +14,11 @@ import {
   moveFile,
   writeFile,
 } from '@dr.pogodin/react-native-fs';
+import {
+  LANDSCAPE,
+  OrientationLocker,
+  UNLOCK,
+} from 'react-native-orientation-locker';
 import { OptionRow } from '../components/OptionRow';
 import { colors, spacing } from '../theme/theme';
 import {
@@ -58,6 +64,12 @@ export function RecordScreen() {
 
   const cameraRef = useRef<Camera>(null);
 
+  // Bottom-tab navigators keep inactive screens mounted by default, so an
+  // always-mounted <OrientationLocker> here would stay locked to landscape
+  // even after navigating to another tab. Gating on focus (not just mount)
+  // releases the lock the moment this tab loses focus.
+  const isFocused = useIsFocused();
+
   const {
     club,
     cameraView,
@@ -95,6 +107,14 @@ export function RecordScreen() {
   }, [audioEnabled, microphonePermission, requestMicrophoneAccess]);
 
   const hasCameraAccess = cameraPermission === 'granted';
+
+  // Explicit UNLOCK, not just leaving the locker unmounted: this library
+  // only auto-releases a lock if some other mounted <OrientationLocker>
+  // requests UNLOCK — merely unmounting the last one leaves the Activity's
+  // orientation locked (see docs/adr/0013). Bottom-tab navigators keep this
+  // screen mounted across tab switches, so this has to stay mounted and
+  // toggle its own orientation prop rather than mount/unmount.
+  const shouldLockLandscape = isFocused && hasCameraAccess && device != null;
 
   const saveRecording = useCallback(
     async (video: VideoFile) => {
@@ -174,6 +194,11 @@ export function RecordScreen() {
     // Bottom edge excluded — the bottom tab navigator already accounts
     // for the home indicator inset for its own bar.
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* MVP item 4: recording itself is landscape-only, while navigation
+          elsewhere in the app stays portrait. Always mounted (not
+          conditionally, per the shouldLockLandscape comment above) so it can
+          explicitly request UNLOCK rather than relying on unmount. */}
+      <OrientationLocker orientation={shouldLockLandscape ? LANDSCAPE : UNLOCK} />
       <ScrollView contentContainerStyle={styles.content} testID="record-screen">
         <Text style={styles.title}>Record</Text>
 

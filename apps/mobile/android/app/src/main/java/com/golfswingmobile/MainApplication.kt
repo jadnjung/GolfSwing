@@ -9,6 +9,7 @@ import com.facebook.react.ReactNativeHost
 import com.facebook.react.ReactPackage
 import com.facebook.react.defaults.DefaultReactHost.getDefaultReactHost
 import com.facebook.react.defaults.DefaultReactNativeHost
+import org.wonday.orientation.OrientationActivityLifecycle
 
 class MainApplication : Application(), ReactApplication {
 
@@ -34,5 +35,8 @@ class MainApplication : Application(), ReactApplication {
   override fun onCreate() {
     super.onCreate()
     loadReactNative(this)
+    // react-native-orientation-locker (docs/adr/0013) needs this to track
+    // orientation lock state across activity lifecycle events.
+    registerActivityLifecycleCallbacks(OrientationActivityLifecycle.getInstance())
   }
 }
