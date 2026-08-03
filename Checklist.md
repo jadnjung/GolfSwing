@@ -22,15 +22,15 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 ## Phase 0: Product and Technical Discovery (PRD 16)
 
-- [ ] Final product scope
-- [ ] Supported device matrix
-- [ ] Camera proof of concept
-- [ ] Pose-model benchmark
-- [ ] Ball-tracking feasibility report
-- [ ] Swing-angle definitions
-- [ ] Golf-instructor review
+- [ ] Final product scope (several PRD section 22 decisions still open, e.g. min Android API level as a *product* choice, subscription price, free-tier limits)
+- [x] Supported device matrix (`docs/qa/device-matrix.md` — capability tiers and minimum OS versions defined; physical device acquisition/testing itself still pending, see the doc's own caveats)
+- [ ] Camera proof of concept (needs a real device — blocked, see `docs/adr/0009-defer-pose-inference-library.md`)
+- [ ] Pose-model benchmark (needs a real device — same blocker)
+- [x] Ball-tracking feasibility report (`docs/architecture/ball-tracking-feasibility.md` — desk assessment against PRD 5.6's four levels; no measured accuracy, since that needs real recorded footage)
+- [x] Swing-angle definitions (`docs/architecture/swing-angle-definitions.md` — maps every PRD 5.3 measurement to specific landmarks/formulas; surfaced that handedness isn't captured anywhere in the app yet)
+- [ ] Golf-instructor review (needs a real domain-expert reviewer — not something this agent can substitute for)
 - [ ] Privacy architecture (drafted in PRD section 9; not yet built as an in-app flow)
-- [ ] UX prototype
+- [ ] UX prototype (needs real user testing to count as validated, not just a written wireframe)
 - [x] Architecture decision records (ongoing process, `docs/adr/`)
 
 **Exit criteria:** reliable single-camera capture; pose inference works on representative iOS/Android devices; at least one face-on and one down-the-line metric calculable consistently; storage/replay workflow demonstrated; dual-camera capability boundaries documented. — **not yet met**
