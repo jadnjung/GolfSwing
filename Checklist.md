@@ -50,11 +50,11 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 ## Phase 2: Pose Analysis MVP (PRD 16)
 
-- [ ] Pose inference (`native/ios-pose-inference`, `native/android-pose-inference`)
+- [ ] Pose inference (`native/ios-pose-inference`, `native/android-pose-inference` — library choice deliberately deferred, see `docs/adr/0009-defer-pose-inference-library.md`)
 - [ ] Skeleton overlay
 - [ ] Landmark smoothing
 - [ ] Phase estimation
-- [ ] Core angles (`packages/analysis-engine`)
+- [ ] Core angles (`packages/analysis-engine` — the PRD 5.3 angle formula itself is implemented and tested; applying it to real named joint angles needs real landmark data, which nothing produces yet)
 - [ ] Recording-quality score
 - [ ] Basic feedback rules (`packages/feedback-rules`)
 - [ ] Analysis persistence (`packages/local-database`)

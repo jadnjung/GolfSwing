@@ -6,6 +6,32 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 13:05 KST — Step 8: Begin Phase 2 — joint-angle formula, defer pose-inference library
+
+Phase 1 is now functionally complete (Step 7). Phase 2 (Pose Analysis MVP) starts with pose inference per `docs/16` roadmap — but PRD section 5.2 explicitly says the pose-model choice needs validating against real iOS/Android devices before locking in, and Phase 0's "Pose-model benchmark" deliverable (gating Phase 2 per the roadmap) is still entirely unstarted in `Checklist.md`.
+
+**Checked the realistic pose-inference paths for React Native:**
+
+- `@mediapipe/tasks-vision` — MediaPipe's web/WASM package, not a native iOS/Android binding; using it here would mean running WASM inference instead of native Core ML/NNAPI-accelerated inference, defeating PRD 7.1's on-device native-inference architecture.
+- `react-native-mediapipe` (cdiddy77) — the one existing RN wrapper around MediaPipe's native Tasks API (built on `react-native-vision-camera` frame processors, which this repo already uses per ADR 0004). Last released **2024-12-12**, 7 releases total, single maintainer, no activity since — well below the maintenance bar every other native dependency here has cleared (vision-camera, `@dr.pogodin/react-native-fs`, `react-native-video`, all picked specifically for active multi-release maintenance).
+- Hand-written native modules (Core ML / Vision on iOS, NNAPI/TFLite on Android) — most control, but the largest new native surface in this project yet, and exactly what Phase 0's benchmark deliverable exists to de-risk before committing.
+
+**Decision:** don't lock in a pose-inference library yet — none of the three options clear this repo's bar, and PRD 16 already gates the choice behind device validation this environment can't perform (still no Android Studio; Xcode's license situation is noted below). Recorded in `docs/adr/0009-defer-pose-inference-library.md`.
+
+**Built instead:** the part of Phase 2 that's fully specified and native-independent — PRD 5.3's joint-angle formula. New workspace package `packages/analysis-engine` (previously just a placeholder README, following the same pattern `packages/domain` was in before Step 5): `calculateJointAngleDegrees(a, b, c, minConfidence?)`, implementing the PRD's exact formula (`θ = arccos((BA·BC)/(|BA||BC|))`) with the cosine input clamped to `[-1, 1]` (required — floating-point error can push near-collinear points fractionally outside that range, which would otherwise make `Math.acos` return `NaN`), and confidence-gated per landmark (throws `InsufficientConfidenceError` rather than silently computing from unreliable data, per PRD 5.3: "Reject calculations with insufficient landmark confidence"). Operates on a plain `{x, y, confidence}` point — not the full `Landmark`/`PoseFrame` domain model PRD 7.1 describes, since no pipeline produces that real shape yet; deliberately kept minimal rather than modeling ahead of real data.
+
+**Testing:** 10 cases — right angle, straight line (180°), overlapping direction (0°), scale-invariance, per-landmark confidence rejection (×3), a custom `minConfidence` override, the documented default value, and a zero-length-segment rejection.
+
+**Full workspace validation passed:** `pnpm lint`, `pnpm typecheck`, `pnpm test` (now 5 workspace packages — `packages/analysis-engine` added), `pnpm doctor`.
+
+**Environment note:** `/usr/bin/git` now works directly again (the Xcode-license block from the previous entry is gone — `git version 2.50.1`, `Xcode 26.6` reports OK in `pnpm doctor`). Not something this agent did; noting it since prior commits in this session used `/Library/Developer/CommandLineTools/usr/bin/git` as a workaround and this one didn't need to.
+
+**Known open items:**
+
+- Pose inference, skeleton overlay, landmark smoothing, and phase estimation are all still unbuilt — blocked on the library decision above, which is itself blocked on real device validation.
+- The higher-level PRD 5.3 metrics (knee angle, hip rotation, shoulder tilt, etc.) aren't built yet either — they're straightforward applications of `calculateJointAngleDegrees` once real landmark sequences exist, not a new algorithm.
+- Android Studio is still not installed in this environment; that (plus getting real device time) is the actual unblock for the pose-inference decision, not more research from here.
+
 ## 2026-08-03 12:20 KST — Step 7: Crash handling
 
 Scoped per `docs/adr/0008-crash-handling-scope.md`: build what can actually be delivered responsibly in this environment (no way to create a real crash-reporting vendor account or review its data practices from here), defer the rest to Phase 6 with the reasoning on record rather than silently skipping it or faking a placeholder SDK integration.
@@ -234,4 +260,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Step 8 (not started): Begin Phase 2: Pose Analysis MVP with a pose-inference library/model decision (PRD section 8, 5.2 — MediaPipe is the PRD's suggested starting candidate, needs validating against current iOS/Android support before locking it in). Real device/build verification for everything camera-, video-, and (soon) pose-related is still blocked on Android Studio being installed and the local Xcode license being accepted (`sudo xcodebuild -license` — flagged in the 2026-08-03 12:20 KST entry, needs a human with sudo).
+Genuinely blocked on real device/build access for further Phase 2 progress: pose inference, skeleton overlay, and everything downstream of real landmark data all need a pose-inference library decision, which PRD section 5.2/16 explicitly gates behind validating actual iOS/Android device support (docs/adr/0009). That needs Android Studio installed (still not done) and real device time — not something this agent can do unattended. Until that's unblocked, remaining native-independent Phase 2 work is thin (the angle formula is now done; phase-detection logic (PRD 5.4) also needs real landmark sequences to be meaningfully testable, not just formulas). Worth checking with the user on priority: continue toward Phase 3+ groundwork that's similarly native-independent, or pause for the human-only setup steps (Android Studio, and confirming the Xcode license state) to unblock Phase 2 properly.
