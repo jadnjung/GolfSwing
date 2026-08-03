@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Handedness, SkillLevel, Units } from '@golf-swing/domain';
 import { OptionRow } from '../components/OptionRow';
 import { useProfileStore } from '../state/profileStore';
@@ -27,7 +28,7 @@ export function OnboardingScreen() {
 
   if (step === 'privacy') {
     return (
-      <View style={styles.container} testID="onboarding-privacy">
+      <SafeAreaView style={styles.container} testID="onboarding-privacy">
         <Text style={styles.title}>Your swings stay on this device</Text>
         <Text style={styles.body}>
           Recordings, pose data, and analysis are stored only on this phone.
@@ -42,62 +43,64 @@ export function OnboardingScreen() {
         >
           <Text style={styles.primaryButtonText}>I understand</Text>
         </Pressable>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      testID="onboarding-profile"
-    >
-      <Text style={styles.title}>Set up your profile</Text>
-      <Text style={styles.body}>
-        This helps tailor feedback to you — you can change it later in Settings.
-      </Text>
-
-      <OptionRow
-        label="Handedness"
-        options={HANDEDNESS_OPTIONS}
-        selected={handedness}
-        onSelect={setHandedness}
-      />
-      <OptionRow
-        label="Skill level"
-        options={SKILL_LEVELS}
-        selected={skillLevel}
-        onSelect={setSkillLevel}
-      />
-      <OptionRow
-        label="Primary club"
-        options={CLUBS}
-        selected={primaryClub}
-        onSelect={setPrimaryClub}
-      />
-      <OptionRow
-        label="Units"
-        options={UNITS_OPTIONS}
-        selected={units}
-        onSelect={setUnits}
-      />
-
-      <Pressable
-        style={styles.primaryButton}
-        onPress={() =>
-          save({
-            handedness,
-            skillLevel,
-            primaryClub,
-            units,
-            privacyAcknowledgedAt: new Date().toISOString(),
-          })
-        }
-        testID="profile-save-button"
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        testID="onboarding-profile"
       >
-        <Text style={styles.primaryButtonText}>Get started</Text>
-      </Pressable>
-    </ScrollView>
+        <Text style={styles.title}>Set up your profile</Text>
+        <Text style={styles.body}>
+          This helps tailor feedback to you — you can change it later in
+          Settings.
+        </Text>
+
+        <OptionRow
+          label="Handedness"
+          options={HANDEDNESS_OPTIONS}
+          selected={handedness}
+          onSelect={setHandedness}
+        />
+        <OptionRow
+          label="Skill level"
+          options={SKILL_LEVELS}
+          selected={skillLevel}
+          onSelect={setSkillLevel}
+        />
+        <OptionRow
+          label="Primary club"
+          options={CLUBS}
+          selected={primaryClub}
+          onSelect={setPrimaryClub}
+        />
+        <OptionRow
+          label="Units"
+          options={UNITS_OPTIONS}
+          selected={units}
+          onSelect={setUnits}
+        />
+
+        <Pressable
+          style={styles.primaryButton}
+          onPress={() =>
+            save({
+              handedness,
+              skillLevel,
+              primaryClub,
+              units,
+              privacyAcknowledgedAt: new Date().toISOString(),
+            })
+          }
+          testID="profile-save-button"
+        >
+          <Text style={styles.primaryButtonText}>Get started</Text>
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

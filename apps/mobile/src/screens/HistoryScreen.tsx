@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Swing } from '@golf-swing/domain';
 import { listSwings } from '../data/swingRepository';
@@ -52,7 +53,13 @@ export function HistoryScreen({ navigation }: Props) {
   }, [load]);
 
   return (
-    <View style={styles.container} testID="history-screen">
+    // Bottom edge excluded — the bottom tab navigator already accounts
+    // for the home indicator inset for its own bar.
+    <SafeAreaView
+      style={styles.container}
+      edges={['top']}
+      testID="history-screen"
+    >
       <Text style={styles.title}>History</Text>
 
       {loadState === 'loading' ? (
@@ -76,7 +83,7 @@ export function HistoryScreen({ navigation }: Props) {
           style={styles.list}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 

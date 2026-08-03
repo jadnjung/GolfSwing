@@ -1,5 +1,6 @@
 import type { PropsWithChildren } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing } from '../theme/theme';
 
 interface ScreenContainerProps {
@@ -11,10 +12,14 @@ export function ScreenContainer({
   children,
 }: PropsWithChildren<ScreenContainerProps>) {
   return (
-    <View style={styles.container}>
+    // Bottom edge deliberately excluded: these screens render inside the
+    // bottom tab navigator, which already accounts for the bottom safe
+    // area (home indicator) for its own bar — adding it here too would
+    // double the gap above the tab bar.
+    <SafeAreaView style={styles.container} edges={['top']}>
       <Text style={styles.title}>{title}</Text>
       {children}
-    </View>
+    </SafeAreaView>
   );
 }
 

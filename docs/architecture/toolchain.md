@@ -4,16 +4,27 @@ This mirrors the decision table in `docs/adr/0002-toolchain-baseline.md`. If the
 
 | Component                  | Required      | Team-pinned                            | Locally installed | Verification status                              |
 | -------------------------- | ------------- | -------------------------------------- | ----------------- | ------------------------------------------------ |
-| React Native               | 0.81.x        | 0.81.6                                 | No                | OK — see `docs/adr/0003-react-native-version.md` |
-| Node.js                    | 22 LTS        | 22.23.2                                | Yes (fnm)         | OK                                               |
-| pnpm                       | 10.x          | 10.34.5                                | Yes (corepack)    | OK                                               |
-| JDK                        | 17            | 17                                     | No                | PENDING — manual install                         |
-| Xcode                      | >= 16.1       | TBD                                    | No                | PENDING — manual App Store install               |
-| Ruby                       | 3.3.x         | 3.3.12                                 | Yes (rbenv)       | OK                                               |
-| CocoaPods                  | TBD           | —                                      | No                | Deferred to app scaffolding                      |
-| Fastlane                   | TBD           | —                                      | No                | Deferred to app scaffolding                      |
-| Android compile/target SDK | TBD           | compileSdk 36, targetSdk 36, minSdk 24 | —                 | OK — see `docs/adr/0003-react-native-version.md` |
-| Watchman                   | latest stable | 2026.07.27.00                          | Yes (Homebrew)    | OK                                               |
-| Git                        | any recent    | —                                      | 2.39.5 (observed) | OK                                               |
+| React Native               | 0.81.x        | 0.81.6                                 | No                | OK — see `docs/adr/0003-react-native-version.md`                     |
+| Node.js                    | 22 LTS        | 22.23.2                                | Yes (fnm)         | OK                                                                    |
+| pnpm                       | 10.x          | 10.34.5                                | Yes (corepack)    | OK                                                                    |
+| JDK                        | 17            | 17                                     | Yes (`~/.jdks/`)  | OK — see `docs/adr/0010-real-build-verification.md`                  |
+| Xcode                      | >= 16.1       | 26.6                                   | Yes               | OK — see `docs/adr/0010-real-build-verification.md`                  |
+| Ruby                       | 3.3.x         | 3.3.12                                 | Yes (rbenv)       | OK                                                                    |
+| CocoaPods                  | per `apps/mobile/Gemfile` | 1.15.2 (bundled)           | Yes (`apps/mobile/vendor/bundle`) | OK — run from `apps/mobile`, not the repo root (see ADR 0010) |
+| Fastlane                   | TBD           | —                                      | No                | Deferred — no release pipeline yet                                   |
+| Android compile/target SDK | TBD           | compileSdk 36, targetSdk 36, minSdk 24 | Yes (auto-installed by AGP) | OK — see `docs/adr/0003-react-native-version.md`            |
+| Android SDK / NDK          | —             | `~/Library/Android/sdk`                | Yes (Android Studio default location) | OK                                                |
+| Watchman                   | latest stable | 2026.07.27.00                          | Yes (Homebrew)    | OK                                                                    |
+| Git                        | any recent    | —                                      | 2.50.1 (observed) | OK                                                                    |
 
 Run `scripts/doctor.sh` to get a live read of what's actually installed on a given machine versus this table. Update the "Locally installed" / "Verification status" columns here (not in the ADR) as machines get provisioned — the ADR records the decision, this file tracks state.
+
+## Getting a real build running (per-machine setup, not committed to the repo)
+
+None of this is automated — it's what actually made `./gradlew assembleDebug` and `pod install` succeed on this machine, kept here so the next person (or session) doesn't have to re-derive it:
+
+1. **JDK 17**: Android Studio's bundled JBR is a much newer major version (25 at time of writing) than this project's JDK 17 pin, and Homebrew's `openjdk` cask needs `sudo` to install. Downloaded a Temurin 17 tarball directly (Adoptium's API) to `~/.jdks/jdk-17.0.20+8`, no `sudo` needed — set `JAVA_HOME` to its `Contents/Home` before running `./gradlew`.
+2. **Android SDK components**: the Android Gradle Plugin auto-installs missing SDK platforms/build-tools itself on first build (it fetched Android SDK Platform 36 and Build-Tools 35 automatically) — no manual `sdkmanager` step was needed, despite only platform 37 being present after a fresh Android Studio install.
+3. **Stale Gradle daemon**: a Gradle daemon started with the *wrong* environment (before `JAVA_HOME`/Node were correctly set) keeps reusing that environment across builds until stopped — run `./gradlew --stop` after fixing environment variables, not just re-run the build.
+4. **CocoaPods**: install via `apps/mobile/Gemfile` (`cd apps/mobile && bundle install`), not the repo-root `Gemfile` — the RN CLI template already generated an app-scoped Gemfile in Step 2 with version exclusions for known-broken CocoaPods/activesupport/xcodeproj releases; the root Gemfile's own Step 1 deferral note about CocoaPods was correct to leave alone.
+5. **`pod install` needs the fnm-managed Node active in the same shell** — CocoaPods' autolinking step shells out to plain `node`; if a stale system Node is first on `PATH` (below RN's `engines.node` minimum), autolinking fails with a generic "returned a status code of 1" that doesn't surface the underlying Node error.

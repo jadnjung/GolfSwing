@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Camera,
   useCameraDevice,
@@ -170,132 +171,135 @@ export function RecordScreen() {
   }, []);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      testID="record-screen"
-    >
-      <Text style={styles.title}>Record</Text>
+    // Bottom edge excluded — the bottom tab navigator already accounts
+    // for the home indicator inset for its own bar.
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView contentContainerStyle={styles.content} testID="record-screen">
+        <Text style={styles.title}>Record</Text>
 
-      {!hasCameraAccess ? (
-        <View style={styles.permissionGate}>
-          <Text style={styles.permissionText}>
-            Camera access is required to record a swing. Recordings stay on this
-            device.
-          </Text>
-          <Pressable
-            style={styles.grantButton}
-            onPress={requestCameraAccess}
-            testID="grant-camera-access-button"
-          >
-            <Text style={styles.grantButtonText}>Grant camera access</Text>
-          </Pressable>
-        </View>
-      ) : device == null ? (
-        <Text style={styles.permissionText}>
-          No {cameraPosition === 'front' ? 'front' : 'rear'} camera available on
-          this device.
-        </Text>
-      ) : (
-        <>
-          <View style={styles.previewWrapper} testID="camera-preview-wrapper">
-            <Camera
-              ref={cameraRef}
-              style={StyleSheet.absoluteFill}
-              device={device}
-              isActive
-              video
-              audio={audioEnabled}
-            />
-            {captureStage === 'counting' ? (
-              <View style={styles.countdownOverlay} testID="countdown-overlay">
-                <Text style={styles.countdownText}>{countdownRemaining}</Text>
-              </View>
-            ) : null}
-          </View>
-
-          {captureStage === 'recording' ? (
-            <Pressable
-              style={styles.stopButton}
-              onPress={stopRecording}
-              testID="stop-button"
-            >
-              <Text style={styles.grantButtonText}>Stop</Text>
-            </Pressable>
-          ) : (
+        {!hasCameraAccess ? (
+          <View style={styles.permissionGate}>
+            <Text style={styles.permissionText}>
+              Camera access is required to record a swing. Recordings stay on
+              this device.
+            </Text>
             <Pressable
               style={styles.grantButton}
-              onPress={beginCountdown}
-              disabled={
-                captureStage === 'counting' || captureStage === 'saving'
-              }
-              testID="record-button"
+              onPress={requestCameraAccess}
+              testID="grant-camera-access-button"
             >
-              <Text style={styles.grantButtonText}>
-                {captureStage === 'saving' ? 'Saving…' : 'Record'}
-              </Text>
+              <Text style={styles.grantButtonText}>Grant camera access</Text>
             </Pressable>
-          )}
-
-          {savedSwingId != null ? (
-            <Text style={styles.confirmationText} testID="save-confirmation">
-              Saved swing {savedSwingId}
-            </Text>
-          ) : null}
-          {errorMessage != null ? (
-            <Text style={styles.errorText}>{errorMessage}</Text>
-          ) : null}
-        </>
-      )}
-
-      <OptionRow
-        label="Club"
-        options={CLUBS}
-        selected={club}
-        onSelect={setClub}
-      />
-      <OptionRow
-        label="View"
-        options={CAMERA_VIEWS}
-        selected={cameraView}
-        onSelect={setCameraView}
-      />
-      <OptionRow
-        label="Camera"
-        options={['back', 'front'] as CameraPosition[]}
-        selected={cameraPosition}
-        onSelect={setCameraPosition}
-      />
-      <OptionRow
-        label="Frame rate"
-        options={FRAME_RATES}
-        selected={frameRate}
-        onSelect={setFrameRate}
-      />
-
-      <Text style={styles.note}>
-        Simultaneous front-and-rear recording isn't offered — it requires
-        checking the device's actual concurrent-camera capability, which needs a
-        real device to verify.
-      </Text>
-
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>Record audio</Text>
-        <Pressable
-          onPress={() => setAudioEnabled(!audioEnabled)}
-          style={[styles.option, audioEnabled && styles.optionSelected]}
-        >
-          <Text
-            style={[
-              styles.optionText,
-              audioEnabled && styles.optionTextSelected,
-            ]}
-          >
-            {audioEnabled ? 'On' : 'Off'}
+          </View>
+        ) : device == null ? (
+          <Text style={styles.permissionText}>
+            No {cameraPosition === 'front' ? 'front' : 'rear'} camera available
+            on this device.
           </Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+        ) : (
+          <>
+            <View style={styles.previewWrapper} testID="camera-preview-wrapper">
+              <Camera
+                ref={cameraRef}
+                style={StyleSheet.absoluteFill}
+                device={device}
+                isActive
+                video
+                audio={audioEnabled}
+              />
+              {captureStage === 'counting' ? (
+                <View
+                  style={styles.countdownOverlay}
+                  testID="countdown-overlay"
+                >
+                  <Text style={styles.countdownText}>{countdownRemaining}</Text>
+                </View>
+              ) : null}
+            </View>
+
+            {captureStage === 'recording' ? (
+              <Pressable
+                style={styles.stopButton}
+                onPress={stopRecording}
+                testID="stop-button"
+              >
+                <Text style={styles.grantButtonText}>Stop</Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                style={styles.grantButton}
+                onPress={beginCountdown}
+                disabled={
+                  captureStage === 'counting' || captureStage === 'saving'
+                }
+                testID="record-button"
+              >
+                <Text style={styles.grantButtonText}>
+                  {captureStage === 'saving' ? 'Saving…' : 'Record'}
+                </Text>
+              </Pressable>
+            )}
+
+            {savedSwingId != null ? (
+              <Text style={styles.confirmationText} testID="save-confirmation">
+                Saved swing {savedSwingId}
+              </Text>
+            ) : null}
+            {errorMessage != null ? (
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            ) : null}
+          </>
+        )}
+
+        <OptionRow
+          label="Club"
+          options={CLUBS}
+          selected={club}
+          onSelect={setClub}
+        />
+        <OptionRow
+          label="View"
+          options={CAMERA_VIEWS}
+          selected={cameraView}
+          onSelect={setCameraView}
+        />
+        <OptionRow
+          label="Camera"
+          options={['back', 'front'] as CameraPosition[]}
+          selected={cameraPosition}
+          onSelect={setCameraPosition}
+        />
+        <OptionRow
+          label="Frame rate"
+          options={FRAME_RATES}
+          selected={frameRate}
+          onSelect={setFrameRate}
+        />
+
+        <Text style={styles.note}>
+          Simultaneous front-and-rear recording isn't offered — it requires
+          checking the device's actual concurrent-camera capability, which needs
+          a real device to verify.
+        </Text>
+
+        <View style={styles.row}>
+          <Text style={styles.rowLabel}>Record audio</Text>
+          <Pressable
+            onPress={() => setAudioEnabled(!audioEnabled)}
+            style={[styles.option, audioEnabled && styles.optionSelected]}
+          >
+            <Text
+              style={[
+                styles.optionText,
+                audioEnabled && styles.optionTextSelected,
+              ]}
+            >
+              {audioEnabled ? 'On' : 'Off'}
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

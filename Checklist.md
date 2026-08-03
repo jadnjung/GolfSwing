@@ -17,15 +17,15 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 - [x] Governance files: LICENSE, SECURITY.md, CONTRIBUTING.md, PR template, Dependabot
 - [ ] `.github/CODEOWNERS` has a real GitHub handle (currently placeholder)
 - [ ] CI Actions pinned by commit SHA (currently version tags)
-- [ ] Xcode installed (manual, App Store)
-- [ ] Android Studio + JDK 17 installed (manual)
+- [x] Xcode installed (26.6)
+- [x] Android Studio + JDK 17 installed (JDK 17 via a local Temurin tarball, no `sudo` — see `docs/adr/0010-real-build-verification.md`)
 
 ## Phase 0: Product and Technical Discovery (PRD 16)
 
 - [ ] Final product scope (several PRD section 22 decisions still open, e.g. min Android API level as a _product_ choice, subscription price, free-tier limits)
 - [x] Supported device matrix (`docs/qa/device-matrix.md` — capability tiers and minimum OS versions defined; physical device acquisition/testing itself still pending, see the doc's own caveats)
-- [ ] Camera proof of concept (needs a real device — blocked, see `docs/adr/0009-defer-pose-inference-library.md`)
-- [ ] Pose-model benchmark (needs a real device — same blocker)
+- [ ] Camera proof of concept (app builds and runs on a real iOS simulator now, Step 11 — but actual camera capture/recording still needs a physical device, simulators have no camera)
+- [ ] Pose-model benchmark (blocked on the pose-inference library decision — real device access alone doesn't unblock this, see `docs/adr/0009-defer-pose-inference-library.md`)
 - [x] Ball-tracking feasibility report (`docs/architecture/ball-tracking-feasibility.md` — desk assessment against PRD 5.6's four levels; no measured accuracy, since that needs real recorded footage)
 - [x] Swing-angle definitions (`docs/architecture/swing-angle-definitions.md` — maps every PRD 5.3 measurement to specific landmarks/formulas; surfaced that handedness isn't captured anywhere in the app yet)
 - [ ] Golf-instructor review (needs a real domain-expert reviewer — not something this agent can substitute for)
@@ -33,18 +33,18 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 - [ ] UX prototype (needs real user testing to count as validated, not just a written wireframe)
 - [x] Architecture decision records (ongoing process, `docs/adr/`)
 
-**Exit criteria:** reliable single-camera capture; pose inference works on representative iOS/Android devices; at least one face-on and one down-the-line metric calculable consistently; storage/replay workflow demonstrated; dual-camera capability boundaries documented. — **not yet met**
+**Exit criteria:** reliable single-camera capture; pose inference works on representative iOS/Android devices; at least one face-on and one down-the-line metric calculable consistently; storage/replay workflow demonstrated; dual-camera capability boundaries documented. — **not yet met** (the app now builds and runs on a real iOS simulator, Step 11, but "reliable single-camera capture" needs a physical device with an actual camera to verify; pose inference is still blocked entirely)
 
 ## Phase 1: Recording Foundation (PRD 16)
 
 - [x] React Native shell (`apps/mobile`, RN 0.81.6 — navigation + placeholder screens only, no camera/pose logic)
 - [ ] Native camera modules (`native/ios-swing-capture`, `native/android-swing-capture` — repurposed to future frame-processor plugins per `docs/adr/0004`; base capture is `react-native-vision-camera` instead, not hand-written)
-- [x] Permission flows (camera + microphone, via `react-native-vision-camera`'s permission API — not build-verified, see below)
-- [x] Recording setup screen (club/view/camera/frame-rate/audio selectors + live camera preview once permission is granted — not build-verified)
+- [x] Permission flows (camera + microphone, via `react-native-vision-camera`'s permission API — app builds and boots on a real iOS simulator now, Step 11; actual permission prompts still need a physical device/real camera hardware to fully exercise)
+- [x] Recording setup screen (club/view/camera/frame-rate/audio selectors + live camera preview once permission is granted — build-verified, Step 11; simulators have no camera so the live preview itself is still unverified)
 - [x] Front/rear camera selection (dual explicitly not offered — needs a real device to check concurrent-camera capability)
-- [x] Local video storage (countdown → record → save to `<DocumentDirectoryPath>/swings/<id>/source.mp4` + `analysis-manifest.json`, via `@dr.pogodin/react-native-fs` — not build-verified, see below)
-- [x] Replay (`ReplayScreen`, pushed from `HistoryScreen` via a nested stack navigator; `react-native-video` — not build-verified, see below)
-- [x] History (`HistoryScreen` lists saved swings via `swingRepository.listSwings()`, scanning the filesystem — not build-verified, see below)
+- [x] Local video storage (countdown → record → save to `<DocumentDirectoryPath>/swings/<id>/source.mp4` + `analysis-manifest.json`, via `@dr.pogodin/react-native-fs` — build-verified, Step 11)
+- [x] Replay (`ReplayScreen`, pushed from `HistoryScreen` via a nested stack navigator; `react-native-video` — build-verified, Step 11)
+- [x] History (`HistoryScreen` lists saved swings via `swingRepository.listSwings()`, scanning the filesystem — build-verified, Step 11; actually installed, launched, and screenshotted running on a real iOS simulator)
 - [x] Crash handling (`ErrorBoundary` + global JS error handler + rotating local diagnostic log; external crash-reporting SDK deliberately deferred to Phase 6, see `docs/adr/0008-crash-handling-scope.md`)
 - [x] CI pipeline
 
@@ -102,7 +102,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 ## MVP scope tracker (PRD 3.1 — the 24-item list, cross-cutting across phases above)
 
-1. [x] Local user profile (`OnboardingScreen` + `profileStore`/`profileRepository` — handedness, skill level, primary club, units; stored at `<DocumentDirectoryPath>/profile.json` — not build-verified)
+1. [x] Local user profile (`OnboardingScreen` + `profileStore`/`profileRepository` — handedness, skill level, primary club, units; stored at `<DocumentDirectoryPath>/profile.json` — build-verified, Step 11: actually persisted through a real onboarding flow on a real iOS simulator)
 2. [x] Front- or rear-camera selection
 3. [x] Rear-camera default
 4. [ ] Landscape recording mode
