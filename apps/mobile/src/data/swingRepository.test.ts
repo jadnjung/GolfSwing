@@ -1,9 +1,15 @@
-import { readDir, readFile, unlink } from '@dr.pogodin/react-native-fs';
-import { deleteSwing, listSwings, swingVideoPath } from './swingRepository';
+import { exists, readDir, readFile, unlink } from '@dr.pogodin/react-native-fs';
+import {
+  deleteAllSwings,
+  deleteSwing,
+  listSwings,
+  swingVideoPath,
+} from './swingRepository';
 
 const mockedReadDir = readDir as jest.Mock;
 const mockedReadFile = readFile as jest.Mock;
 const mockedUnlink = unlink as jest.Mock;
+const mockedExists = exists as jest.Mock;
 
 function dirEntry(path: string) {
   return {
@@ -66,6 +72,25 @@ describe('deleteSwing', () => {
   it('propagates a failure rather than swallowing it', async () => {
     mockedUnlink.mockRejectedValue(new Error('permission denied'));
     await expect(deleteSwing('swing-1')).rejects.toThrow('permission denied');
+  });
+});
+
+describe('deleteAllSwings', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('unlinks the whole swings root when it exists', async () => {
+    mockedExists.mockResolvedValue(true);
+    mockedUnlink.mockResolvedValue(undefined);
+    await deleteAllSwings();
+    expect(mockedUnlink).toHaveBeenCalledWith('/mock/documents/swings');
+  });
+
+  it('is a no-op when no swings have been recorded yet', async () => {
+    mockedExists.mockResolvedValue(false);
+    await deleteAllSwings();
+    expect(mockedUnlink).not.toHaveBeenCalled();
   });
 });
 

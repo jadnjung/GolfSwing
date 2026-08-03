@@ -6,6 +6,29 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 17:25 KST — Step 14: Delete-all-data control (Settings)
+
+Direct follow-on from Step 13 — PRD 9.8 lists "delete-all-data control" as distinct from per-swing deletion, and `OnboardingScreen`'s own privacy-notice text already promises "You can delete any swing, or all of your data, at any time from Settings" — a promise `SettingsScreen` (still a placeholder) had no way to keep until now.
+
+**Built:**
+
+- `swingRepository.deleteAllSwings()`: `unlink`s the entire `SWINGS_ROOT` directory in one call (a no-op, not an error, if no swings have been recorded yet — checked via `exists()` first).
+- `profileRepository.deleteProfile()`: same pattern for `profile.json`.
+- `profileStore` gained a `clear()` action: deletes the persisted profile and sets `{ profile: null, status: 'loaded' }` in the store directly — deliberately not calling `load()` again afterward, since we already know the result (no redundant disk read), and it immediately sends the user back through `OnboardingScreen` via `App.tsx`'s existing gating logic.
+- `SettingsScreen`: a real "Delete all data" control — confirms via `Alert.alert` (naming what will happen: swings deleted, profile reset, setup repeated), then calls `deleteAllSwings()` and `clearProfile()` in sequence; a failure at either step shows a second alert with the underlying error rather than leaving the user unsure whether anything happened.
+
+**Testing:** `deleteAllSwings`/`deleteProfile` each got two repository-level cases (unlinks when something exists; no-op when nothing does). `profileStore.test.ts` gained a `clear()` case. New `SettingsScreen.test.tsx` (confirmed deletion calls both repository functions and resets the store; a failure surfaces the error alert without crashing and leaves the profile untouched).
+
+**Bug caught by a failing test, not by inspection:** the "deletion fails" test initially passed a rejecting `unlink` mock but left `exists()` at its default `false` — since both `deleteAllSwings` and `deleteProfile` check `exists()` before calling `unlink` at all, neither delete function would have actually run, so the rejection path was never exercised and the test's own assertion would have been checking against code that never executed. Fixed by mocking `exists()` to `true` in that test. Also hit the same `clearAllMocks()`-doesn't-reset-`mockRejectedValue` leakage from Step 13 again (a rejected implementation from an earlier `describe` block bled into a later one) — fixed by explicitly setting `mockResolvedValue` in the new test rather than assuming the default.
+
+**Full workspace validation passed:** `pnpm lint` (one real catch: `colors` import went unused in `SettingsScreen.tsx` after using `#D14343` directly for the destructive-button color, matching the existing inline-hex pattern already used for destructive UI elsewhere in this codebase, e.g. `RecordScreen`'s stop button), `pnpm typecheck`, `pnpm test` (44 tests now, up from 37).
+
+**Known open items:**
+
+- Not build-verified on a real simulator/emulator (both were shut down before this step, per your instruction).
+- PRD 9.8's "optional short undo period" and "confirmation showing estimated storage to be freed" are still unbuilt — this and Step 13 cover immediate deletion only, per-swing and all-at-once.
+- The tab-bar icon gap from Step 12 is still open.
+
 ## 2026-08-03 17:05 KST — Step 13: Local swing deletion
 
 Picked from the two candidates left after Step 12 (tab-bar icons vs. native-independent MVP items): deletion over icons — it's a core PRD 9.8 privacy/data-control requirement and part of the app actually being usable (History could list swings but never remove any), not just cosmetic polish.
@@ -377,4 +400,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Local deletion (Step 13) is done. Remaining native-independent candidates: swing tagging and local export of an annotated video (MVP items 19, 22 — export is a bigger scope, since "annotated" implies overlay data that doesn't exist until Phase 2); the tab-bar icon gap from Step 12 (needs an icon-library decision first); or PRD 9.8's remaining delete-behavior pieces (undo period, delete-all-data control). A physical device is still the real unblock for camera capture, permission prompts, and pose-model benchmarking (ADR 0009) — simulators/emulators have no camera. Worth checking with the user on priority.
+Both deletion tiers (per-swing, Step 13; all-data, Step 14) are done. Remaining native-independent candidates: swing tagging (MVP item 19); local export of an annotated video (MVP item 22 — bigger scope, since "annotated" implies overlay data that doesn't exist until Phase 2, so this would really just be exporting the raw source video for now); the tab-bar icon gap from Step 12 (needs an icon-library decision first); or PRD 9.8's remaining pieces (optional undo period, storage-size estimate in the delete confirmation). A physical device is still the real unblock for camera capture, permission prompts, and pose-model benchmarking (ADR 0009) — simulators/emulators have no camera.

@@ -1,9 +1,15 @@
-import { exists, readFile, writeFile } from '@dr.pogodin/react-native-fs';
+import {
+  exists,
+  readFile,
+  unlink,
+  writeFile,
+} from '@dr.pogodin/react-native-fs';
 import { useProfileStore } from './profileStore';
 
 const mockedExists = exists as jest.Mock;
 const mockedReadFile = readFile as jest.Mock;
 const mockedWriteFile = writeFile as jest.Mock;
+const mockedUnlink = unlink as jest.Mock;
 
 const profile = {
   handedness: 'right' as const,
@@ -49,6 +55,19 @@ describe('useProfileStore', () => {
     expect(useProfileStore.getState()).toMatchObject({
       status: 'loaded',
       profile,
+    });
+  });
+
+  it('clear() deletes the persisted profile and resets the store', async () => {
+    useProfileStore.setState({ status: 'loaded', profile });
+    mockedExists.mockResolvedValue(true);
+
+    await useProfileStore.getState().clear();
+
+    expect(mockedUnlink).toHaveBeenCalled();
+    expect(useProfileStore.getState()).toMatchObject({
+      status: 'loaded',
+      profile: null,
     });
   });
 });

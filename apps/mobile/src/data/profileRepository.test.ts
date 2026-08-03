@@ -1,9 +1,20 @@
-import { exists, readFile, writeFile } from '@dr.pogodin/react-native-fs';
-import { PROFILE_PATH, loadProfile, saveProfile } from './profileRepository';
+import {
+  exists,
+  readFile,
+  unlink,
+  writeFile,
+} from '@dr.pogodin/react-native-fs';
+import {
+  PROFILE_PATH,
+  deleteProfile,
+  loadProfile,
+  saveProfile,
+} from './profileRepository';
 
 const mockedExists = exists as jest.Mock;
 const mockedReadFile = readFile as jest.Mock;
 const mockedWriteFile = writeFile as jest.Mock;
+const mockedUnlink = unlink as jest.Mock;
 
 const profile = {
   handedness: 'right' as const,
@@ -47,5 +58,23 @@ describe('saveProfile', () => {
       PROFILE_PATH,
       JSON.stringify(profile, null, 2),
     );
+  });
+});
+
+describe('deleteProfile', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('unlinks the profile when one exists', async () => {
+    mockedExists.mockResolvedValue(true);
+    await deleteProfile();
+    expect(mockedUnlink).toHaveBeenCalledWith(PROFILE_PATH);
+  });
+
+  it('is a no-op when no profile has been saved yet', async () => {
+    mockedExists.mockResolvedValue(false);
+    await deleteProfile();
+    expect(mockedUnlink).not.toHaveBeenCalled();
   });
 });

@@ -122,7 +122,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 18. [ ] Frame-by-frame scrubbing
 19. [ ] Swing tagging
 20. [ ] Side-by-side comparison with a previous swing
-21. [x] Local deletion (`HistoryScreen`'s "Delete" button per swing, confirmation via `Alert.alert`, `swingRepository.deleteSwing` removes the whole swing directory — PRD 9.8 — not build-verified)
+21. [x] Local deletion (`HistoryScreen`'s "Delete" button per swing, confirmation via `Alert.alert`, `swingRepository.deleteSwing` removes the whole swing directory — PRD 9.8; `SettingsScreen`'s "Delete all data" control adds the delete-all-data tier — not build-verified)
 22. [ ] Local export of an annotated video
 23. [x] Privacy and permission screens (privacy notice in `OnboardingScreen`'s first step; camera/mic permission gate already existed in `RecordScreen`, Step 3)
 24. [x] Crash reporting that does not upload swing videos or pose data (local-only error boundary + diagnostic log; no network path exists at all yet, so nothing uploads anything — external SDK integration deferred, see `docs/adr/0008-crash-handling-scope.md`)

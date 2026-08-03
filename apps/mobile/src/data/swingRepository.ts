@@ -1,5 +1,6 @@
 import {
   DocumentDirectoryPath,
+  exists,
   readDir,
   readFile,
   unlink,
@@ -21,6 +22,17 @@ export function swingVideoPath(swingId: string): string {
  */
 export async function deleteSwing(swingId: string): Promise<void> {
   await unlink(`${SWINGS_ROOT}/${swingId}`);
+}
+
+/**
+ * Deletes every saved swing at once — PRD 9.8's "delete-all-data control",
+ * distinct from deleting one swing at a time. A no-op (not an error) if
+ * the swings directory doesn't exist yet.
+ */
+export async function deleteAllSwings(): Promise<void> {
+  if (await exists(SWINGS_ROOT)) {
+    await unlink(SWINGS_ROOT);
+  }
 }
 
 /**
