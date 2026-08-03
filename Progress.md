@@ -6,6 +6,25 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 16:45 KST — Step 12: Android emulator verification (parity with Step 11's iOS check)
+
+Direct follow-up to Step 11's "Next up" — closing the gap where iOS got a real install+launch+screenshot but Android only got a successful Gradle build. All reasoning added to `docs/adr/0010-real-build-verification.md` section 9 rather than a new ADR, since it's the same investigation.
+
+**Set up an Android emulator from scratch:** Android Studio's own install doesn't include a standalone `sdkmanager`/`avdmanager` — downloaded Google's command-line-tools zip separately, extracted to `~/Library/Android/sdk/cmdline-tools/latest`, accepted SDK licenses, installed a `system-images;android-34;google_apis;arm64-v8a` image, created an AVD (`golf-swing-test`, Pixel 7 profile) via `avdmanager`, and booted it.
+
+**Installed and drove the already-built debug APK** (from Step 11) on the emulator: `adb install`, `adb reverse tcp:8081 tcp:8081` (the emulator doesn't share the host's `localhost` the way the iOS Simulator does — Metro is unreachable without this), `adb shell am start`, then `adb shell input tap` to actually click through the onboarding flow (privacy notice → profile setup → Home tab) and `adb shell screencap` to capture each step.
+
+**Confirmed:** the Step 11 safe-area fix holds on Android too (title sits cleanly below the status bar, matching iOS), and the full persisted-profile onboarding-gate flow works end-to-end on a second, independent platform.
+
+**Surfaced a real, previously invisible UX gap:** the bottom tab bar shows a visible "missing icon" placeholder box above every tab label on Android (subtler on iOS, but the fallback code path is identical on both). Traced to `@react-navigation/bottom-tabs`' own `BottomTabBar.js`: `options.tabBarIcon ?? MissingIcon` — `RootNavigator.tsx` has never set `tabBarIcon` on any `Tab.Screen`, since nobody had actually looked at a rendered tab bar until Step 11. Deliberately **not fixed here** — picking an icon library (`@expo/vector-icons`, `react-native-vector-icons`, `lucide-react-native`, etc.) is its own dependency decision, deserving the same maintenance/licensing scrutiny every other dependency in this project has gotten, not a rushed pick to silence a cosmetic gap.
+
+**No code changed this step** beyond doc updates — this was pure verification (emulator setup + driving the existing build), not new application logic.
+
+**Known open items:**
+
+- The tab-bar icon gap needs its own follow-up: pick an icon library, then set `tabBarIcon` per tab in `RootNavigator.tsx`.
+- Still only simulator/emulator coverage on both platforms — no physical device testing has happened yet.
+
 ## 2026-08-03 16:25 KST — Step 11: Real build verification — Xcode + Android Studio installed
 
 You installed Xcode and Android Studio on this machine. Every step since Step 2 has carried a "not build-verified" caveat — this was the first chance to actually close that out. Full details and reasoning for each fix are in `docs/adr/0010-real-build-verification.md`; summary here.
@@ -338,4 +357,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Real build/device verification is now genuinely possible (Step 11) — this changes what's actually blocked. Reasonable next steps: (1) get an Android emulator running and screenshotted the way iOS was, closing out that gap; (2) revisit Phase 0's "Camera proof of concept" on a physical device if one becomes available (simulators have no camera); (3) with real builds now possible, the pose-inference library decision (ADR 0009) may be worth revisiting sooner than previously thought, since "needs a real device to validate" is no longer a blanket blocker — though a physical device (not just simulator/emulator) is still likely needed for genuine pose-model benchmarking. Worth checking with the user on priority.
+Both platforms now have real simulator/emulator install+launch+screenshot verification (Steps 11–12). Remaining candidates: (1) the tab-bar icon gap Step 12 surfaced — pick an icon library and wire up `tabBarIcon`; (2) a physical device is still the real unblock for camera capture, permission prompts, and pose-model benchmarking (ADR 0009) — simulators/emulators have no camera; (3) local deletion/export/tagging (MVP items 19, 21, 22) are still unbuilt and are native-independent, buildable now. Worth checking with the user on priority.
