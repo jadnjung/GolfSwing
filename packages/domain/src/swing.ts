@@ -22,6 +22,10 @@ export interface Swing {
   // swing-angle-definitions.md's "Open gaps" section: several PRD 5.3
   // metrics like lead/trail elbow are undefined without it).
   handedness: Handedness;
+  // PRD 5.11: user-assigned free-text tags. Optional and defaults to
+  // empty — unlike handedness, there's no reason a manifest without tags
+  // should be treated as corrupt (nothing wrote this field before Step 15).
+  tags: string[];
 }
 
 // Exported for packages/domain/src/profile.ts's primaryClub validation —
@@ -82,6 +86,12 @@ export function parseSwingManifest(raw: unknown): Swing {
   if (!HANDEDNESS_VALUES.includes(manifest.handedness as Handedness)) {
     throw new InvalidSwingManifestError('missing or invalid "handedness"');
   }
+  if (
+    manifest.tags !== undefined &&
+    (!Array.isArray(manifest.tags) || !manifest.tags.every(isNonEmptyString))
+  ) {
+    throw new InvalidSwingManifestError('invalid "tags"');
+  }
 
   return {
     id: manifest.id,
@@ -93,5 +103,6 @@ export function parseSwingManifest(raw: unknown): Swing {
     durationMs: manifest.durationMs,
     analysisStatus: "pending",
     handedness: manifest.handedness as Handedness,
+    tags: (manifest.tags as string[] | undefined) ?? [],
   };
 }

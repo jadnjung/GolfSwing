@@ -1,8 +1,15 @@
-import { exists, readDir, readFile, unlink } from '@dr.pogodin/react-native-fs';
+import {
+  exists,
+  readDir,
+  readFile,
+  unlink,
+  writeFile,
+} from '@dr.pogodin/react-native-fs';
 import {
   deleteAllSwings,
   deleteSwing,
   listSwings,
+  setSwingTags,
   swingVideoPath,
 } from './swingRepository';
 
@@ -10,6 +17,7 @@ const mockedReadDir = readDir as jest.Mock;
 const mockedReadFile = readFile as jest.Mock;
 const mockedUnlink = unlink as jest.Mock;
 const mockedExists = exists as jest.Mock;
+const mockedWriteFile = writeFile as jest.Mock;
 
 function dirEntry(path: string) {
   return {
@@ -91,6 +99,33 @@ describe('deleteAllSwings', () => {
     mockedExists.mockResolvedValue(false);
     await deleteAllSwings();
     expect(mockedUnlink).not.toHaveBeenCalled();
+  });
+});
+
+describe('setSwingTags', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('rewrites the manifest with the new tags, preserving other fields', async () => {
+    mockedReadFile.mockResolvedValue(JSON.stringify(newerManifest));
+
+    await setSwingTags('swing-newer', ['favorite', 'needs work']);
+
+    expect(mockedWriteFile).toHaveBeenCalledWith(
+      '/mock/documents/swings/swing-newer/analysis-manifest.json',
+      JSON.stringify(
+        { ...newerManifest, tags: ['favorite', 'needs work'] },
+        null,
+        2,
+      ),
+    );
+  });
+
+  it('throws rather than overwriting a corrupt manifest', async () => {
+    mockedReadFile.mockResolvedValue('not valid json{{{');
+    await expect(setSwingTags('swing-1', ['tag'])).rejects.toThrow();
+    expect(mockedWriteFile).not.toHaveBeenCalled();
   });
 });
 

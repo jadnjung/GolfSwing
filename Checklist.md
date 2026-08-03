@@ -120,7 +120,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 16. [x] Video replay
 17. [ ] Slow-motion playback
 18. [ ] Frame-by-frame scrubbing
-19. [ ] Swing tagging
+19. [x] Swing tagging (`HistoryScreen`'s tag editor modal — add/remove free-text tags per swing, persisted via `swingRepository.setSwingTags` — PRD 5.11 — not build-verified)
 20. [ ] Side-by-side comparison with a previous swing
 21. [x] Local deletion (`HistoryScreen`'s "Delete" button per swing, confirmation via `Alert.alert`, `swingRepository.deleteSwing` removes the whole swing directory — PRD 9.8; `SettingsScreen`'s "Delete all data" control adds the delete-all-data tier — not build-verified)
 22. [ ] Local export of an annotated video

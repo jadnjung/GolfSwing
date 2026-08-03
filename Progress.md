@@ -6,6 +6,31 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 17:50 KST — Step 15: Swing tagging
+
+Picked from the candidates left after Step 14: swing tagging (MVP item 19) over the tab-bar icon gap — another concrete MVP checklist item, native-independent, and directly extends `HistoryScreen`'s existing per-swing action row (Tags, alongside the Delete button from Step 13).
+
+**Domain:** `Swing` gained a `tags: string[]` field (PRD 5.11). Unlike `handedness` (Step 10, required — no historical manifest ever lacked it), `tags` is optional in the raw manifest and defaults to `[]` when absent, since older manifests genuinely predate this field and shouldn't be treated as corrupt. `parseSwingManifest` validates that, when present, `tags` is an array of non-empty strings.
+
+**Repository:** `swingRepository.setSwingTags(swingId, tags)` reads and *parses* the existing manifest (via `parseSwingManifest`, not a raw read) before rewriting it with only `tags` changed — a deliberate choice: it fails loudly on a corrupt manifest rather than silently overwriting one with a partial/malformed one.
+
+**UI:** `HistoryScreen` rows show existing tags as small chips (visible without opening anything), plus a new "Tags" button that opens a `Modal`-based editor: existing tags as removable chips (tap to remove), a `TextInput` to add new ones (submit via the keyboard's return key), and Cancel/Save. Save calls `setSwingTags` and reloads the list; a failure shows an alert rather than silently discarding the edit.
+
+**Testing:** `swing.test.ts` gained cases for tags being parsed when present, defaulted to `[]` when absent, and rejected when malformed (non-array, non-string entries, empty-string entries). `swingRepository.test.ts` gained `setSwingTags` cases (rewrites preserving other fields; throws rather than overwriting a corrupt manifest — mirrors the domain-level design choice). `HistoryScreen.test.tsx` gained three cases: add-and-save, remove-via-chip-then-save, and cancel-without-saving.
+
+**Bugs caught by failing tests, not by inspection:**
+
+- The "add a tag" test initially called `onChangeText` and `onSubmitEditing` back-to-back inside one `act()` block — but `onSubmitEditing`'s closure (via `addTag`'s `useCallback`) was captured from the render *before* `onChangeText`'s state update had flushed, so it still saw the old (empty) draft text. Fixed by splitting them into separate `act()` calls, letting React re-render between them — the same category of stale-closure timing issue, just in a new shape.
+- Adding tests that open the `TagEditorModal` (more re-renders of the underlying `FlatList`) tipped a previously-dormant issue into actually failing: `VirtualizedList`'s internal debounced `setState` (`_updateCellsToRenderTimeoutID`) fired *after* the test file finished, and Jest treats a `console.error` logged post-teardown as a hard failure — invisible in the per-test-suite pass/fail summary, but `pnpm test`'s aggregate exit code was 1 despite every individual test passing. Fixed by hoisting `tree` to `describe`-scope and unmounting it in `afterEach` (the same pattern already used in `App.test.tsx` since Step 10), which lets `VirtualizedList` clear its pending timer via `componentWillUnmount` before the file's context tears down.
+
+**Full workspace validation passed:** `pnpm lint`, `pnpm typecheck`, `pnpm test` (49 tests now, up from 44 — and `pnpm test`'s exit code itself, not just the visible pass count, was worth double-checking after the `VirtualizedList` fix).
+
+**Known open items:**
+
+- Not build-verified on a real simulator/emulator (both shut down before Step 13, per your instruction).
+- No sort/filter/search-by-tag UI yet (PRD 5.11 also lists these) — this step covers adding/removing tags only, not using them to organize the list.
+- The tab-bar icon gap from Step 12 is still open.
+
 ## 2026-08-03 17:25 KST — Step 14: Delete-all-data control (Settings)
 
 Direct follow-on from Step 13 — PRD 9.8 lists "delete-all-data control" as distinct from per-swing deletion, and `OnboardingScreen`'s own privacy-notice text already promises "You can delete any swing, or all of your data, at any time from Settings" — a promise `SettingsScreen` (still a placeholder) had no way to keep until now.
@@ -400,4 +425,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Both deletion tiers (per-swing, Step 13; all-data, Step 14) are done. Remaining native-independent candidates: swing tagging (MVP item 19); local export of an annotated video (MVP item 22 — bigger scope, since "annotated" implies overlay data that doesn't exist until Phase 2, so this would really just be exporting the raw source video for now); the tab-bar icon gap from Step 12 (needs an icon-library decision first); or PRD 9.8's remaining pieces (optional undo period, storage-size estimate in the delete confirmation). A physical device is still the real unblock for camera capture, permission prompts, and pose-model benchmarking (ADR 0009) — simulators/emulators have no camera.
+Deletion (Steps 13-14) and tagging (Step 15) are done. Remaining native-independent candidates: local export of a swing's source video (MVP item 22 — "annotated" export needs overlay data that doesn't exist until Phase 2, so this would really just be exporting the raw source video for now, e.g. via the OS share sheet); side-by-side swing comparison (MVP item 20 — bigger scope, needs a two-swing-picker UI and a synchronized playback view); the tab-bar icon gap from Step 12 (needs an icon-library decision first); or PRD 9.8's remaining pieces (optional undo period, storage-size estimate in the delete confirmation). A physical device is still the real unblock for camera capture, permission prompts, and pose-model benchmarking (ADR 0009) — simulators/emulators have no camera.

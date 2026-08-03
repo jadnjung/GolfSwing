@@ -15,9 +15,17 @@ function validManifest() {
 }
 
 describe("parseSwingManifest", () => {
-  it("parses a valid manifest", () => {
+  it("parses a valid manifest, defaulting tags to an empty array", () => {
     const swing = parseSwingManifest(validManifest());
-    expect(swing).toEqual(validManifest());
+    expect(swing).toEqual({ ...validManifest(), tags: [] });
+  });
+
+  it("parses tags when present", () => {
+    const swing = parseSwingManifest({
+      ...validManifest(),
+      tags: ["favorite", "needs work"],
+    });
+    expect(swing.tags).toEqual(["favorite", "needs work"]);
   });
 
   it.each([
@@ -31,6 +39,9 @@ describe("parseSwingManifest", () => {
     ["negative durationMs", "durationMs", { ...validManifest(), durationMs: -1 }],
     ["wrong analysisStatus", "analysisStatus", { ...validManifest(), analysisStatus: "done" }],
     ["invalid handedness", "handedness", { ...validManifest(), handedness: "both" }],
+    ["non-array tags", "tags", { ...validManifest(), tags: "favorite" }],
+    ["tags with a non-string entry", "tags", { ...validManifest(), tags: ["ok", 5] }],
+    ["tags with an empty-string entry", "tags", { ...validManifest(), tags: [""] }],
   ])("rejects a manifest with %s", (_description, _field, malformed) => {
     expect(() => parseSwingManifest(malformed)).toThrow(InvalidSwingManifestError);
   });

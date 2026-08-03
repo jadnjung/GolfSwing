@@ -4,14 +4,34 @@ import {
   readDir,
   readFile,
   unlink,
+  writeFile,
 } from '@dr.pogodin/react-native-fs';
 import { parseSwingManifest, type Swing } from '@golf-swing/domain';
 
 export const SWINGS_ROOT = `${DocumentDirectoryPath}/swings`;
 
+function manifestPath(swingId: string): string {
+  return `${SWINGS_ROOT}/${swingId}/analysis-manifest.json`;
+}
+
 /** Path to a saved swing's source video, per the layout RecordScreen writes. */
 export function swingVideoPath(swingId: string): string {
   return `${SWINGS_ROOT}/${swingId}/source.mp4`;
+}
+
+/**
+ * Replaces a swing's tags (PRD 5.11) by reading its manifest, parsing and
+ * validating it (so a corrupt manifest fails loudly here rather than
+ * silently overwriting it with a partial one), and writing it back with
+ * only `tags` changed.
+ */
+export async function setSwingTags(
+  swingId: string,
+  tags: string[],
+): Promise<void> {
+  const path = manifestPath(swingId);
+  const manifest = parseSwingManifest(JSON.parse(await readFile(path)));
+  await writeFile(path, JSON.stringify({ ...manifest, tags }, null, 2));
 }
 
 /**

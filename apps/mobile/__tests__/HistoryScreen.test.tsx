@@ -5,13 +5,19 @@
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import { Alert, Text } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { readDir, readFile, unlink } from '@dr.pogodin/react-native-fs';
+import {
+  readDir,
+  readFile,
+  unlink,
+  writeFile,
+} from '@dr.pogodin/react-native-fs';
 import { HistoryScreen } from '../src/screens/HistoryScreen';
 import type { HistoryStackParamList } from '../src/navigation/types';
 
 const mockedReadDir = readDir as jest.Mock;
 const mockedReadFile = readFile as jest.Mock;
 const mockedUnlink = unlink as jest.Mock;
+const mockedWriteFile = writeFile as jest.Mock;
 
 const savedManifest = {
   id: 'swing-1',
@@ -23,6 +29,7 @@ const savedManifest = {
   durationMs: 4200,
   analysisStatus: 'pending',
   handedness: 'right',
+  tags: ['favorite'],
 };
 
 function mockOneSavedSwing() {
@@ -66,14 +73,19 @@ function findText(
 }
 
 describe('HistoryScreen', () => {
+  let tree: ReactTestRenderer.ReactTestRenderer | undefined;
+
   afterEach(() => {
+    act(() => {
+      tree?.unmount();
+    });
+    tree = undefined;
     jest.clearAllMocks();
   });
 
   it('shows an empty state when no swings are recorded', async () => {
     mockedReadDir.mockResolvedValue([]);
 
-    let tree: ReactTestRenderer.ReactTestRenderer;
     await act(async () => {
       tree = ReactTestRenderer.create(
         <HistoryScreen {...mockNavigationProps()} />,
@@ -88,7 +100,6 @@ describe('HistoryScreen', () => {
   it('renders saved swings fetched from the repository', async () => {
     mockOneSavedSwing();
 
-    let tree: ReactTestRenderer.ReactTestRenderer;
     await act(async () => {
       tree = ReactTestRenderer.create(
         <HistoryScreen {...mockNavigationProps()} />,
@@ -105,7 +116,6 @@ describe('HistoryScreen', () => {
     mockOneSavedSwing();
 
     const props = mockNavigationProps();
-    let tree: ReactTestRenderer.ReactTestRenderer;
     await act(async () => {
       tree = ReactTestRenderer.create(<HistoryScreen {...props} />);
     });
@@ -132,7 +142,6 @@ describe('HistoryScreen', () => {
         deleteButton?.onPress?.();
       });
 
-    let tree: ReactTestRenderer.ReactTestRenderer;
     await act(async () => {
       tree = ReactTestRenderer.create(
         <HistoryScreen {...mockNavigationProps()} />,
@@ -170,7 +179,6 @@ describe('HistoryScreen', () => {
         deleteButton?.onPress?.();
       });
 
-    let tree: ReactTestRenderer.ReactTestRenderer;
     await act(async () => {
       tree = ReactTestRenderer.create(
         <HistoryScreen {...mockNavigationProps()} />,
@@ -190,5 +198,93 @@ describe('HistoryScreen', () => {
     );
 
     alertSpy.mockRestore();
+  });
+
+  it('opens the tag editor, adds a tag, and saves it', async () => {
+    mockOneSavedSwing();
+    mockedWriteFile.mockResolvedValue(undefined);
+
+    await act(async () => {
+      tree = ReactTestRenderer.create(
+        <HistoryScreen {...mockNavigationProps()} />,
+      );
+    });
+
+    await act(async () => {
+      tree!.root.findByProps({ testID: 'edit-tags-button' }).props.onPress();
+    });
+
+    expect(
+      tree!.root.findAllByProps({ testID: 'tag-editor-modal' }).length,
+    ).toBeGreaterThan(0);
+
+    await act(async () => {
+      tree!.root
+        .findByProps({ testID: 'tag-input' })
+        .props.onChangeText('needs work');
+    });
+    await act(async () => {
+      tree!.root.findByProps({ testID: 'tag-input' }).props.onSubmitEditing();
+    });
+
+    await act(async () => {
+      tree!.root.findByProps({ testID: 'tag-editor-save' }).props.onPress();
+    });
+
+    expect(mockedWriteFile).toHaveBeenCalledWith(
+      expect.stringContaining('swing-1'),
+      expect.stringContaining('needs work'),
+    );
+    expect(
+      tree!.root.findAllByProps({ testID: 'tag-editor-modal' }).length,
+    ).toBe(0);
+  });
+
+  it('removes a tag by tapping its chip in the editor', async () => {
+    mockOneSavedSwing();
+    mockedWriteFile.mockResolvedValue(undefined);
+
+    await act(async () => {
+      tree = ReactTestRenderer.create(
+        <HistoryScreen {...mockNavigationProps()} />,
+      );
+    });
+
+    await act(async () => {
+      tree!.root.findByProps({ testID: 'edit-tags-button' }).props.onPress();
+    });
+
+    const [chip] = tree!.root.findAllByProps({ testID: 'tag-chip' });
+    await act(async () => {
+      chip!.props.onPress();
+    });
+    await act(async () => {
+      tree!.root.findByProps({ testID: 'tag-editor-save' }).props.onPress();
+    });
+
+    const [, writtenContent] = mockedWriteFile.mock.calls[0]!;
+    expect(JSON.parse(writtenContent).tags).toEqual([]);
+  });
+
+  it('closes the editor without saving when cancelled', async () => {
+    mockOneSavedSwing();
+
+    await act(async () => {
+      tree = ReactTestRenderer.create(
+        <HistoryScreen {...mockNavigationProps()} />,
+      );
+    });
+
+    await act(async () => {
+      tree!.root.findByProps({ testID: 'edit-tags-button' }).props.onPress();
+    });
+    await act(async () => {
+      tree!.root.findByProps({ testID: 'tag-editor-cancel' }).props.onPress();
+    });
+
+    expect(mockedWriteFile).not.toHaveBeenCalled();
+    expect(
+      tree!.root.findAllByProps({ testID: 'tag-editor-modal' }).length,
+    ).toBe(0);
   });
 });
