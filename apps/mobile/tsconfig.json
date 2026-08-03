@@ -1,0 +1,11 @@
+{
+  "extends": ["@react-native/typescript-config", "../../tsconfig.base.json"],
+  "compilerOptions": {
+    // RN's config deliberately sets this false ("causes issues with
+    // package.json exports") — our stricter base sets it true, so it must
+    // be re-overridden here rather than silently inherited.
+    "forceConsistentCasingInFileNames": false
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["**/node_modules", "**/Pods", "android", "ios"]
+}

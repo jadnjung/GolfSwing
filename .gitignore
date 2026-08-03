@@ -1,0 +1,54 @@
+# Node
+node_modules/
+dist/
+build/
+coverage/
+*.log
+.pnpm-store/
+.turbo/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# React Native / iOS
+ios/Pods/
+ios/build/
+ios/DerivedData/
+**/*.xcuserstate
+**/xcuserdata/
+*.ipa
+*.mobileprovision
+*.p12
+*.p8
+
+# React Native / Android
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+*.keystore
+*.jks
+
+# Ruby / CocoaPods / Fastlane
+.bundle/
+vendor/bundle/
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# Editors / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Models (large binaries tracked deliberately per-file, not by default glob)
+models/**/*.bin
+models/**/*.tflite
+models/**/*.mlpackage
+
+# Local test/dev data
+/apps/mobile/ios/*.xcworkspace

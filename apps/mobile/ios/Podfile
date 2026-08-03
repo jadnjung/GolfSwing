@@ -1,0 +1,61 @@
+# Resolve react_native_pods.rb with node to allow for hoisting
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native/scripts/react_native_pods.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
+platform :ios, min_ios_version_supported
+prepare_react_native_project!
+
+linkage = ENV['USE_FRAMEWORKS']
+if linkage != nil
+  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+  use_frameworks! :linkage => linkage.to_sym
+end
+
+target 'GolfSwingMobile' do
+  config = use_native_modules!
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+
+  post_install do |installer|
+    # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false,
+      # :ccache_enabled => true
+    )
+
+    # fmt 11.0.2 (vendored transitively via glog/hermes-engine) miscompiles
+    # under newer Apple Clang (confirmed on Xcode 26.6): its consteval
+    # codepath fails with "call to consteval function ... is not a constant
+    # expression" for several call sites in format-inl.h. Not a bug in this
+    # app's own code — see docs/adr/0010-real-build-verification.md.
+    # `pod install` regenerates Pods/ from scratch each time, so this patch
+    # has to be reapplied post-install rather than committed as an edited
+    # vendored file.
+    fmt_base_header = "#{Pod::Config.instance.installation_root}/Pods/fmt/include/fmt/base.h"
+    if File.exist?(fmt_base_header)
+      contents = File.read(fmt_base_header)
+      marker = '#define FMT_USE_CONSTEVAL 0  // patched, see apps/mobile/ios/Podfile'
+      unless contents.include?(marker)
+        patched = contents.sub(
+          /\/\/ Detect consteval.*?\n#if !defined\(__cpp_lib_is_constant_evaluated\).*?\n#endif\n/m,
+          "// Detect consteval, C++20 constexpr extensions and std::is_constant_evaluated.\n#{marker}\n"
+        )
+        if patched == contents
+          Pod::UI.warn "Could not patch fmt's FMT_USE_CONSTEVAL — the block this Podfile expects to replace wasn't found (fmt version changed?). Check docs/adr/0010-real-build-verification.md."
+        else
+          File.write(fmt_base_header, patched)
+          Pod::UI.puts "Patched fmt/include/fmt/base.h: forced FMT_USE_CONSTEVAL to 0 (see docs/adr/0010-real-build-verification.md)".green
+        end
+      end
+    end
+  end
+end
