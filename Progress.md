@@ -6,6 +6,26 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 17:05 KST — Step 13: Local swing deletion
+
+Picked from the two candidates left after Step 12 (tab-bar icons vs. native-independent MVP items): deletion over icons — it's a core PRD 9.8 privacy/data-control requirement and part of the app actually being usable (History could list swings but never remove any), not just cosmetic polish.
+
+**Built:**
+
+- `swingRepository.deleteSwing(swingId)`: `unlink`s the swing's whole directory (`<DocumentDirectoryPath>/swings/<id>/`) in one call — `@dr.pogodin/react-native-fs`'s `unlink` recursively removes a directory and its contents (confirmed from its own README, not assumed), so this correctly removes the source video, manifest, and anything future analysis steps add alongside them, per PRD 9.8's requirement that deletion remove everything associated with a swing, not just the manifest record.
+- `HistoryScreen`: each row now has a "Delete" button. Pressing it shows a native confirm/cancel `Alert.alert` (PRD 9.8's "immediate deletion" tier — the optional "short undo period" tier is not built) naming the club and date so the user knows what they're about to remove; confirming deletes and reloads the list; a failure shows a second alert with the underlying error message rather than failing silently.
+- Restructured `SwingRow`'s layout: the outer row is now a plain `View` (was itself the pressable-to-Replay element), with a `Pressable` wrapping just the title/subtitle for navigation, and a separate `Pressable` for delete — necessary since a row can't have two independent tap targets if the whole row is one `Pressable`.
+
+**Testing:** `swingRepository.test.ts` gained two `deleteSwing` cases (unlinks the right path; propagates a failure rather than swallowing it — deletion failing silently would violate PRD 9.8's confirmation-and-visibility intent). `HistoryScreen.test.tsx` gained two cases: confirming the alert deletes and refreshes to the empty state; a failed delete shows the second alert. Both mock `Alert.alert` by directly invoking the "destructive" button's `onPress`, the standard RN testing pattern for native alerts. Also had to update the pre-existing "navigates to Replay" test — the tap target moved from the whole row (`testID="swing-row"`) to the new inner `Pressable` (`testID="swing-row-content"`) as part of the layout restructure.
+
+**Full workspace validation passed:** `pnpm lint`, `pnpm typecheck`, `pnpm test` (37 tests now, up from 33 — 4 new: 2 repository, 2 screen).
+
+**Known open items:**
+
+- Not build-verified on a real simulator/emulator this step (the ones from Steps 11–12 were shut down per your request before this work started).
+- PRD 9.8's "optional short undo period" and "delete-all-data control" are still unbuilt — this step covers per-swing immediate deletion only.
+- The tab-bar icon gap from Step 12 is still open.
+
 ## 2026-08-03 16:45 KST — Step 12: Android emulator verification (parity with Step 11's iOS check)
 
 Direct follow-up to Step 11's "Next up" — closing the gap where iOS got a real install+launch+screenshot but Android only got a successful Gradle build. All reasoning added to `docs/adr/0010-real-build-verification.md` section 9 rather than a new ADR, since it's the same investigation.
@@ -357,4 +377,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Both platforms now have real simulator/emulator install+launch+screenshot verification (Steps 11–12). Remaining candidates: (1) the tab-bar icon gap Step 12 surfaced — pick an icon library and wire up `tabBarIcon`; (2) a physical device is still the real unblock for camera capture, permission prompts, and pose-model benchmarking (ADR 0009) — simulators/emulators have no camera; (3) local deletion/export/tagging (MVP items 19, 21, 22) are still unbuilt and are native-independent, buildable now. Worth checking with the user on priority.
+Local deletion (Step 13) is done. Remaining native-independent candidates: swing tagging and local export of an annotated video (MVP items 19, 22 — export is a bigger scope, since "annotated" implies overlay data that doesn't exist until Phase 2); the tab-bar icon gap from Step 12 (needs an icon-library decision first); or PRD 9.8's remaining delete-behavior pieces (undo period, delete-all-data control). A physical device is still the real unblock for camera capture, permission prompts, and pose-model benchmarking (ADR 0009) — simulators/emulators have no camera. Worth checking with the user on priority.

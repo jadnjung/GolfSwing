@@ -2,6 +2,7 @@ import {
   DocumentDirectoryPath,
   readDir,
   readFile,
+  unlink,
 } from '@dr.pogodin/react-native-fs';
 import { parseSwingManifest, type Swing } from '@golf-swing/domain';
 
@@ -10,6 +11,16 @@ export const SWINGS_ROOT = `${DocumentDirectoryPath}/swings`;
 /** Path to a saved swing's source video, per the layout RecordScreen writes. */
 export function swingVideoPath(swingId: string): string {
   return `${SWINGS_ROOT}/${swingId}/source.mp4`;
+}
+
+/**
+ * Deletes a saved swing's entire directory (source video, manifest, and
+ * anything future analysis steps add alongside them) — PRD section 9.8:
+ * deleting a swing must remove the original video, thumbnail, pose data,
+ * metrics, and feedback together, not just the manifest record.
+ */
+export async function deleteSwing(swingId: string): Promise<void> {
+  await unlink(`${SWINGS_ROOT}/${swingId}`);
 }
 
 /**

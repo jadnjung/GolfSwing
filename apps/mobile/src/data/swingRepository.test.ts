@@ -1,8 +1,9 @@
-import { readDir, readFile } from '@dr.pogodin/react-native-fs';
-import { listSwings, swingVideoPath } from './swingRepository';
+import { readDir, readFile, unlink } from '@dr.pogodin/react-native-fs';
+import { deleteSwing, listSwings, swingVideoPath } from './swingRepository';
 
 const mockedReadDir = readDir as jest.Mock;
 const mockedReadFile = readFile as jest.Mock;
+const mockedUnlink = unlink as jest.Mock;
 
 function dirEntry(path: string) {
   return {
@@ -49,6 +50,22 @@ describe('swingVideoPath', () => {
     expect(swingVideoPath('swing-1')).toBe(
       '/mock/documents/swings/swing-1/source.mp4',
     );
+  });
+});
+
+describe('deleteSwing', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("unlinks the swing's whole directory", async () => {
+    await deleteSwing('swing-1');
+    expect(mockedUnlink).toHaveBeenCalledWith('/mock/documents/swings/swing-1');
+  });
+
+  it('propagates a failure rather than swallowing it', async () => {
+    mockedUnlink.mockRejectedValue(new Error('permission denied'));
+    await expect(deleteSwing('swing-1')).rejects.toThrow('permission denied');
   });
 });
 

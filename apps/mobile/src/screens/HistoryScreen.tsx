@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Swing } from '@golf-swing/domain';
-import { listSwings } from '../data/swingRepository';
+import { deleteSwing, listSwings } from '../data/swingRepository';
 import type { HistoryStackParamList } from '../navigation/types';
 import { colors, spacing } from '../theme/theme';
 
@@ -20,16 +27,33 @@ function formatDate(iso: string): string {
   return Number.isNaN(date.getTime()) ? iso : date.toLocaleString();
 }
 
-function SwingRow({ swing, onPress }: { swing: Swing; onPress: () => void }) {
+function SwingRow({
+  swing,
+  onPress,
+  onDelete,
+}: {
+  swing: Swing;
+  onPress: () => void;
+  onDelete: () => void;
+}) {
   return (
-    <Pressable style={styles.row} onPress={onPress} testID="swing-row">
-      <Text style={styles.rowTitle}>
-        {swing.clubType} · {swing.cameraView}
-      </Text>
-      <Text style={styles.rowSubtitle}>
-        {formatDate(swing.createdAt)} · {formatDuration(swing.durationMs)}
-      </Text>
-    </Pressable>
+    <View style={styles.row} testID="swing-row">
+      <Pressable
+        style={styles.rowContent}
+        onPress={onPress}
+        testID="swing-row-content"
+      >
+        <Text style={styles.rowTitle}>
+          {swing.clubType} · {swing.cameraView}
+        </Text>
+        <Text style={styles.rowSubtitle}>
+          {formatDate(swing.createdAt)} · {formatDuration(swing.durationMs)}
+        </Text>
+      </Pressable>
+      <Pressable onPress={onDelete} hitSlop={8} testID="delete-swing-button">
+        <Text style={styles.deleteText}>Delete</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -51,6 +75,34 @@ export function HistoryScreen({ navigation }: Props) {
   useEffect(() => {
     load();
   }, [load]);
+
+  const confirmDelete = useCallback(
+    (swing: Swing) => {
+      Alert.alert(
+        'Delete this swing?',
+        `${swing.clubType} · ${formatDate(swing.createdAt)} will be permanently deleted. This can't be undone.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await deleteSwing(swing.id);
+                await load();
+              } catch (error) {
+                Alert.alert(
+                  "Couldn't delete this swing",
+                  error instanceof Error ? error.message : undefined,
+                );
+              }
+            },
+          },
+        ],
+      );
+    },
+    [load],
+  );
 
   return (
     // Bottom edge excluded — the bottom tab navigator already accounts
@@ -78,6 +130,7 @@ export function HistoryScreen({ navigation }: Props) {
               onPress={() =>
                 navigation.navigate('Replay', { swingId: item.id })
               }
+              onDelete={() => confirmDelete(item)}
             />
           )}
           style={styles.list}
@@ -107,9 +160,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
+  },
+  rowContent: {
+    flex: 1,
   },
   rowTitle: {
     color: colors.text,
@@ -121,5 +180,11 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 12,
     marginTop: 2,
+  },
+  deleteText: {
+    color: '#D14343',
+    fontSize: 13,
+    fontWeight: '600',
+    marginLeft: spacing.md,
   },
 });
