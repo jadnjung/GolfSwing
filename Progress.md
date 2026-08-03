@@ -6,6 +6,26 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 19:15 KST — Step 19: Tab bar icons
+
+Closes the tab-bar icon gap Step 12 surfaced (a "missing icon" placeholder box on every tab) — the last open item after Step 18 finished the MVP-scope feature work.
+
+**Library decision:** checked `react-native-vector-icons` (huge install base, but last released 2025-07-23 — over a year stale — and needs real native font-linking configuration: `Info.plist` `UIAppFonts` on iOS, a Gradle step on Android), `@expo/vector-icons` (requires `expo-font` as a peer, an unwanted Expo-ecosystem coupling per PRD 7.4's rejection of managed Expo), and `lucide-react-native` (actively maintained — 1.28.0, released 2026-07-30 — SVG-based via `react-native-svg`, itself actively maintained with no narrow peer constraint, no native font-linking step needed). Chose **`lucide-react-native`**. Recorded in `docs/adr/0012-tab-bar-icon-library.md`.
+
+**Built:** `RootNavigator.tsx`'s five tabs now render real icons (House/Video/Clock/Dumbbell/Settings) via named, module-scope `tabBarIcon` components — not inline arrow functions, which ESLint's `react/no-unstable-nested-components` flagged as a real warning while wiring this up (a genuinely different component identity every render otherwise).
+
+**Two real bugs caught while integrating, not by inspection:**
+
+1. Adding `import { House, ... } from 'lucide-react-native'` broke every test with `SyntaxError: Unexpected token 'export'` — the package's `.mjs` ESM build wasn't covered by `transformIgnorePatterns`. Adding it there didn't fix it either: the actual root cause was that `lucide-react-native`'s `package.json` `exports` map has a `"react-native"` condition pointing straight at the `.mjs` build, which RN's Jest preset resolver honors (matching Metro's real resolution), but the preset's own `transform` map only registers `.js`/`.ts`/`.tsx` — so `.mjs` files hit Jest's CommonJS loader untransformed regardless of `transformIgnorePatterns`, which only controls *whether* a matching transform runs, not *which extensions* have one registered. Fixed by re-declaring the preset's `transform` entries in `jest.config.js` with `mjs` added (Jest doesn't deep-merge a project's `transform` with the preset's — omitting the original entries would have silently dropped asset-file transforms).
+2. Once tests ran, `App.test.tsx` took ~19 seconds (previously ~1s) — importing the barrel `lucide-react-native` module pulls in and transforms its entire ~1600-icon set just to resolve 5 names. Switched to deep imports (`lucide-react-native/icons/house`, etc.), cutting it back to ~1.6s — measured directly before and after, not estimated.
+
+**Full workspace validation passed:** `pnpm lint`, `pnpm typecheck`, `pnpm test` (still 71 tests — no new test cases needed; the fix is icon rendering, which existing tests don't assert against, and adding icon-specific snapshot/assertion tests would be testing a third-party library's own rendering, not this app's logic).
+
+**Known open items:**
+
+- Not build-verified on a real simulator/emulator (both shut down before Step 13) — icon rendering specifically hasn't been visually confirmed on a device.
+- This closes out every item flagged since Step 12. Remaining work is either a physical device (camera/pose/permission testing) or Phase 2 analysis data (skeleton overlay, joint angles, phase/feedback, metric deltas) — see the "Next up" note below.
+
 ## 2026-08-03 18:55 KST — Step 18: Side-by-side swing comparison
 
 Picked from the candidates left after Step 17: side-by-side comparison (MVP item 20) over the tab-bar icon gap — the largest remaining MVP-checklist gap, versus a cosmetic fix.
@@ -491,4 +511,4 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ## Next up
 
-Every MVP-scope item (PRD 3.1's 24-item list) that's genuinely buildable without a physical device or Phase 2 pose data is now done. What's left in `Checklist.md`'s MVP tracker either needs a physical device (camera/pose items), Phase 2 analysis data (skeleton overlay, joint angles, phase detection, feedback, metric deltas), or is a smaller polish item (the tab-bar icon gap from Step 12, landscape recording mode, wiring the frame-rate selector to an actual device format). Worth checking with the user on priority: continue with polish items, or treat this as a natural pause point for Phase 1/thin-Phase-2 work and wait for real device access.
+Every MVP-scope item genuinely buildable without a physical device or Phase 2 pose data is done, and the tab-bar icon gap (the last open polish item) is closed. What remains in `Checklist.md`'s MVP tracker now falls into two buckets, both genuinely blocked rather than avoidable with more UI work: a physical device (camera/pose/permission testing, landscape mode, real frame-rate/format wiring — simulators/emulators can't exercise these meaningfully) or Phase 2 analysis data (skeleton overlay, joint angles, phase detection, feedback, metric deltas — all need a pose-inference library decision that's itself gated behind real-device validation, ADR 0009). This is a genuine pause point, not a place to keep manufacturing native-independent work — worth checking with the user on priority before continuing.
