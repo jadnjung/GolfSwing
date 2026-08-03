@@ -6,6 +6,17 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-03 21:30 KST — DevOps cleanup: CODEOWNERS and CI Action SHA pinning
+
+Two long-open items from the Foundational/DevOps checklist section, closed now that this session has real network access to resolve them:
+
+- `.github/CODEOWNERS`'s placeholder owner replaced with `@jadnjung`, the repo's actual GitHub handle.
+- `.github/workflows/pr-checks.yml`'s `actions/checkout@v4`, `actions/setup-node@v4`, `actions/cache@v4`, and `gitleaks/gitleaks-action@v2` all pinned to their current full commit SHAs (resolved via the GitHub API), with the version kept as a trailing comment. Deliberately did not bump any of these to their actual latest major versions (checkout/setup-node are at v7, cache at v6, gitleaks-action at v3 upstream) — pinning by SHA and upgrading are separate decisions, and this was scoped to the former only.
+
+No code/test changes; not build-relevant, so no `pnpm` validation needed beyond confirming the YAML is still well-formed.
+
+---
+
 ## 2026-08-03 21:00 KST — Step 21: Landscape recording mode
 
 Closes MVP item 4 (PRD 3.1) and PRD 2.4's "portrait navigation, landscape swing recording." Checked with the user first since this needed a new native dependency and native iOS/Android config in the same category that needed real build verification in Steps 11-12 — they chose to reactivate the simulator/emulator and verify for real rather than skip verification.

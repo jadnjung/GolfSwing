@@ -15,8 +15,8 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 - [x] CI pipeline: lint, format, typecheck, test, dependency audit, secret scan (`.github/workflows/pr-checks.yml`)
 - [x] Local machine provisioned and verified (`scripts/doctor.sh`)
 - [x] Governance files: LICENSE, SECURITY.md, CONTRIBUTING.md, PR template, Dependabot
-- [ ] `.github/CODEOWNERS` has a real GitHub handle (currently placeholder)
-- [ ] CI Actions pinned by commit SHA (currently version tags)
+- [x] `.github/CODEOWNERS` has a real GitHub handle (`@jadnjung`)
+- [x] CI Actions pinned by commit SHA (`.github/workflows/pr-checks.yml`, resolved via the GitHub API — kept the same major versions, v4/v2, rather than bundling an upgrade)
 - [x] Xcode installed (26.6)
 - [x] Android Studio + JDK 17 installed (JDK 17 via a local Temurin tarball, no `sudo` — see `docs/adr/0010-real-build-verification.md`)
 
