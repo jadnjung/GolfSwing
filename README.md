@@ -2,15 +2,15 @@
 
 An on-device golf swing analysis mobile app (React Native + native Swift/Kotlin camera & ML modules). Records a swing, runs on-device pose detection, computes joint angles and swing phases, and gives beginner-friendly coaching feedback — with no required account and no video ever leaving the device by default.
 
-Full spec: [`docs/PRD.md`](docs/PRD.md).
+Full spec: [`Project.md`](Project.md), [`Architecture.md`](Architecture.md), [`Decisions.md`](Decisions.md), [`Roadmap.md`](Roadmap.md).
 
 ## Start here (new to this project?)
 
 Read these in order:
 
 1. **[`CLAUDE.md`](CLAUDE.md)** — working agreement for AI-assisted development in this repo (git workflow, coding standards, validation requirements). Read this before making any change.
-2. **[`docs/PRD.md`](docs/PRD.md)** — the full product/architecture/DevOps spec. Everything else in this repo traces back to it.
-3. **[`Checklist.md`](Checklist.md)** — status at a glance: what's done, in progress, and not started, structured after the PRD's delivery roadmap. Read this to see where the project stands _right now_.
+2. **[`Project.md`](Project.md)**, **[`Architecture.md`](Architecture.md)**, **[`Decisions.md`](Decisions.md)**, **[`Roadmap.md`](Roadmap.md)** — the full product/architecture/decisions/roadmap spec (split from the original combined PRD). Everything else in this repo traces back to it.
+3. **[`Checklist.md`](Checklist.md)** — status at a glance: what's done, in progress, and not started, structured after the roadmap's delivery phases. Read this to see where the project stands _right now_.
 4. **[`Progress.md`](Progress.md)** — chronological log of completed work, newest first, with the _why_ behind each decision. Read this to understand how we got here, not just where we are.
 5. **[`docs/adr/`](docs/adr/)** — Architecture Decision Records for specific technical choices (toolchain versions, React Native version, etc.) and the reasoning behind them.
 

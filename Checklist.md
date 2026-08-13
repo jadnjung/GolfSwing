@@ -1,9 +1,9 @@
 # Checklist
 
-Status-at-a-glance for what's done, in progress, and not started, for anyone joining the project. Structured after `docs/PRD.md` section 16 (Delivery Roadmap) and section 3.1 (MVP Scope) — every item traces back to a PRD section, not invented here.
+Status-at-a-glance for what's done, in progress, and not started, for anyone joining the project. Structured after `Roadmap.md` section 16 (Delivery Roadmap) and `Project.md` section 3.1 (MVP Scope) — every item traces back to a spec section, not invented here.
 
 - For **why/how** something was done (decisions, commits, bugs fixed), see `Progress.md`.
-- For **what** the finished product must do, see `docs/PRD.md`.
+- For **what** the finished product must do, see `Project.md`.
 - Check an item only when it's actually done and validated — not when work has merely started (use "in progress" text instead).
 
 ---
@@ -20,6 +20,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 - [x] CI Actions pinned by commit SHA (`.github/workflows/pr-checks.yml`, resolved via the GitHub API — kept the same major versions, v4/v2, rather than bundling an upgrade)
 - [x] Xcode installed (26.6)
 - [x] Android Studio + JDK 17 installed (JDK 17 via a local Temurin tarball, no `sudo` — see `docs/adr/0010-real-build-verification.md`)
+- [x] `docs/PRD.md` split into `Project.md`/`Architecture.md`/`Decisions.md`/`Roadmap.md` per `CLAUDE.md`'s "Project Documentation" convention (Title Case filenames, matching this repo's existing `Progress.md`/`Checklist.md` convention); fixed `CLAUDE.md`'s own all-caps filename references (`PROJECT.md`→`Project.md`, etc., plus the pre-existing `PROGRESS.md`/`CHECKLIST.md` mismatch) and updated every live cross-reference to the old `docs/PRD.md` path (`README.md`, `SECURITY.md`, `Checklist.md`, `Progress.md`, `docs/architecture/*.md`, `docs/qa/device-matrix.md`)
 
 ## Phase 0: Product and Technical Discovery (PRD 16)
 

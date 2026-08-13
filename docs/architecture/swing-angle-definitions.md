@@ -1,6 +1,6 @@
 # Swing-angle definitions
 
-Phase 0 deliverable (`docs/PRD.md` section 16) and prerequisite for actually implementing PRD section 5.3's measurement list once a pose-inference library is available (`docs/adr/0009-defer-pose-inference-library.md`). This maps every named PRD 5.3 measurement to specific landmarks and a specific formula, so implementing them later is direct engineering, not re-deriving biomechanics on the spot.
+Phase 0 deliverable (`Roadmap.md` section 16) and prerequisite for actually implementing `Project.md` section 5.3's measurement list once a pose-inference library is available (`docs/adr/0009-defer-pose-inference-library.md`). This maps every named `Project.md` 5.3 measurement to specific landmarks and a specific formula, so implementing them later is direct engineering, not re-deriving biomechanics on the spot.
 
 ## Landmark naming
 

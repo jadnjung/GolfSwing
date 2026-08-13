@@ -1,6 +1,6 @@
 # Supported device matrix
 
-Phase 0 deliverable (`docs/PRD.md` section 16) and the category structure PRD section 13.4's physical-device test matrix expects. This defines _what counts as in-scope_ and _why_, grounded in what's actually configured in `apps/mobile` today. It is **not** a substitute for PRD 13.4's requirement to test on real physical hardware — "camera and ML validation cannot rely only on emulators or simulators" — which this agent cannot do without physical devices. Selecting and acquiring the actual test devices below is still a team action item, not something this document completes.
+Phase 0 deliverable (`Roadmap.md` section 16) and the category structure `Architecture.md` section 13.4's physical-device test matrix expects. This defines _what counts as in-scope_ and _why_, grounded in what's actually configured in `apps/mobile` today. It is **not** a substitute for `Architecture.md` 13.4's requirement to test on real physical hardware — "camera and ML validation cannot rely only on emulators or simulators" — which this agent cannot do without physical devices. Selecting and acquiring the actual test devices below is still a team action item, not something this document completes.
 
 ## Minimum OS versions (already configured, not proposed)
 

@@ -1,6 +1,6 @@
 # Ball-tracking feasibility report
 
-Phase 0 deliverable (`docs/PRD.md` section 16). PRD section 5.6 already lays out the four-level framework this report evaluates against; PRD section 19, Risk 2, already names ball tracking as a major risk with a mitigation plan. This is a desk-research assessment against that framework — it does not (and cannot, in this environment) include actual recorded test footage or a measured detection accuracy, since that needs real cameras, real swings, and likely a labeled evaluation set (PRD 8.4).
+Phase 0 deliverable (`Roadmap.md` section 16). `Project.md` section 5.6 already lays out the four-level framework this report evaluates against; `Roadmap.md` section 19, Risk 2, already names ball tracking as a major risk with a mitigation plan. This is a desk-research assessment against that framework — it does not (and cannot, in this environment) include actual recorded test footage or a measured detection accuracy, since that needs real cameras, real swings, and likely a labeled evaluation set (`Architecture.md` 8.4).
 
 ## Why this is hard, restated concretely
 

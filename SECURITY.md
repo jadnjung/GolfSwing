@@ -1,6 +1,6 @@
 # Security Policy
 
-This is a privacy-first, on-device application (see `docs/PRD.md` section 9). Swing video and pose data never leave the device by default, which shrinks but does not eliminate the attack surface — local storage encryption, permission handling, and dependency supply-chain hygiene still matter.
+This is a privacy-first, on-device application (see `Project.md` section 9). Swing video and pose data never leave the device by default, which shrinks but does not eliminate the attack surface — local storage encryption, permission handling, and dependency supply-chain hygiene still matter.
 
 ## Reporting a vulnerability
 

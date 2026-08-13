@@ -1,6 +1,6 @@
 # Professional swing comparison: published-benchmark approach
 
-Phase 4 deliverable (`docs/PRD.md` sections 4.4, 5.9, Phase 4 "Professional comparison"), pulled forward as desk research since PRD section 22 lists "which professional swing footage can be licensed" as an open, unresolved product decision. This report answers a narrower, related question: **can professional swing video be scraped from the internet for this feature?** No — and it proposes a lower-risk alternative that doesn't wait on that licensing question at all.
+Phase 4 deliverable (`Project.md` sections 4.4, 5.9; `Roadmap.md` Phase 4 "Professional comparison"), pulled forward as desk research since `Project.md` section 22 lists "which professional swing footage can be licensed" as an open, unresolved product decision. This report answers a narrower, related question: **can professional swing video be scraped from the internet for this feature?** No — and it proposes a lower-risk alternative that doesn't wait on that licensing question at all.
 
 ## Why scraping video isn't an option
 
@@ -12,12 +12,12 @@ Peer-reviewed golf biomechanics research already publishes exactly the kind of q
 
 Concrete benchmarks found (each figure traceable to its source paper, not just quoted secondhand):
 
-- **X-Factor (hip-shoulder separation at the top of the backswing)**: ~42-48° for tour professionals (Titleist Performance Institute's commonly cited 42° figure; a 2022 systematic review reports ~48° via 2D measurement), versus 54-58° for recreational golfers — professionals show *less* separation than amateurs in this dataset, a genuinely counter-intuitive, citation-worthy finding (Bell et al., "Golf Swing Biomechanics: A Systematic Review and Methodological Recommendations for Kinematics," *Sports* 2022, CC BY, [MDPI](https://www.mdpi.com/2075-4663/10/6/91) / [PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC9227529/)).
+- **X-Factor (hip-shoulder separation at the top of the backswing)**: ~42-48° for tour professionals (Titleist Performance Institute's commonly cited 42° figure; a 2022 systematic review reports ~48° via 2D measurement), versus 54-58° for recreational golfers — professionals show _less_ separation than amateurs in this dataset, a genuinely counter-intuitive, citation-worthy finding (Bell et al., "Golf Swing Biomechanics: A Systematic Review and Methodological Recommendations for Kinematics," _Sports_ 2022, CC BY, [MDPI](https://www.mdpi.com/2075-4663/10/6/91) / [PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC9227529/)).
 - **Kinematic sequence** (the proximal-to-distal rotational firing order: pelvis peaks first, then torso, then arm, then club): named as the theoretically optimal pattern, but the same review notes it's "rarely been verified" even in skilled amateurs — a useful caveat for feedback-rule copy, not just a number to hit.
 - **Downswing tempo**: professional males ~0.31 ± 0.04s, recreational males ~0.25 ± 0.02s (driver) — professionals take longer in transition, not shorter, another counter-intuitive number worth surfacing to users rather than assuming "faster is better."
 - **Clubhead speed at impact (driver)**: professional males ~50.1 ± 2.1 m/s, skilled amateurs ~45.4 ± 3.6 m/s.
 - **Hip and shoulder rotation reference values** (elite golfers): hip internal/external rotation ~50° lead side / ~40° trail side; shoulder elevation ~100° lead side / ~13° trail side.
-- **Rotational velocities** (pelvis/upper-torso/relative "X-prime" peak angular velocity across downswing, impact, and follow-through), and a composite "Swing Performance Index" shown to separate professionals (100 ± 10) from amateurs (82 ± 4) using three specific velocity features (Wheat et al., "The Swing Performance Index," *Frontiers in Sports and Active Living* 2022, CC BY, [full text](https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2022.986281/full)).
+- **Rotational velocities** (pelvis/upper-torso/relative "X-prime" peak angular velocity across downswing, impact, and follow-through), and a composite "Swing Performance Index" shown to separate professionals (100 ± 10) from amateurs (82 ± 4) using three specific velocity features (Wheat et al., "The Swing Performance Index," _Frontiers in Sports and Active Living_ 2022, CC BY, [full text](https://www.frontiersin.org/journals/sports-and-active-living/articles/10.3389/fspor.2022.986281/full)).
 
 ## What this unlocks, and what it doesn't
 
