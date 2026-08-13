@@ -14,6 +14,23 @@ import {
 import { HistoryScreen } from '../src/screens/HistoryScreen';
 import type { HistoryStackParamList } from '../src/navigation/types';
 
+// HistoryScreen renders standalone here (no real NavigationContainer/Screen),
+// so useFocusEffect would otherwise throw looking for navigation context it
+// doesn't have. Runs the effect once on mount — a faithful enough stand-in
+// for "this screen is focused" for tests that don't exercise blur/refocus.
+jest.mock('@react-navigation/native', () => {
+  const actual = jest.requireActual('@react-navigation/native');
+  const ReactActual = jest.requireActual('react');
+  return {
+    ...actual,
+    useFocusEffect: jest.fn((effect: () => void | (() => void)) => {
+      ReactActual.useEffect(effect, [effect]);
+    }),
+  };
+});
+
+const mockedUseFocusEffect = jest.requireMock('@react-navigation/native')
+  .useFocusEffect as jest.Mock;
 const mockedReadDir = readDir as jest.Mock;
 const mockedReadFile = readFile as jest.Mock;
 const mockedUnlink = unlink as jest.Mock;
@@ -109,6 +126,33 @@ describe('HistoryScreen', () => {
     expect(
       tree!.root.findAllByProps({ testID: 'swing-row' }).length,
     ).toBeGreaterThan(0);
+    expect(findText(tree!, text => text.includes('driver'))).toHaveLength(1);
+  });
+
+  it('reloads the swing list on every focus, not just the first mount', async () => {
+    // Regression test: HistoryScreen used to load swings in a plain
+    // mount-only useEffect. Bottom-tab navigators keep inactive screens
+    // mounted, so a swing recorded after first visiting History never
+    // appeared until the app fully restarted. useFocusEffect fixes this by
+    // reloading on every focus, not just the first one - simulated here by
+    // invoking the callback passed to useFocusEffect a second time.
+    mockedReadDir.mockResolvedValue([]);
+
+    await act(async () => {
+      tree = ReactTestRenderer.create(
+        <HistoryScreen {...mockNavigationProps()} />,
+      );
+    });
+
+    expect(mockedReadDir).toHaveBeenCalledTimes(1);
+
+    mockOneSavedSwing();
+    const focusCallback = mockedUseFocusEffect.mock.calls[0][0];
+    await act(async () => {
+      focusCallback();
+    });
+
+    expect(mockedReadDir).toHaveBeenCalledTimes(2);
     expect(findText(tree!, text => text.includes('driver'))).toHaveLength(1);
   });
 

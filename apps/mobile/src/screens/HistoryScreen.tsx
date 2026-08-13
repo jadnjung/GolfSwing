@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Swing } from '@golf-swing/domain';
 import {
@@ -176,9 +177,17 @@ export function HistoryScreen({ navigation }: Props) {
     }
   }, []);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  // useFocusEffect, not a plain mount-only useEffect: bottom-tab navigators
+  // keep inactive screens mounted (the same behavior that needed working
+  // around for the landscape lock in RecordScreen, ADR 0013), so a
+  // mount-only load here would show a stale list forever after the first
+  // visit — never picking up a swing recorded after this screen first
+  // mounted, until the whole app restarts.
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
 
   const confirmDelete = useCallback(
     async (swing: Swing) => {
