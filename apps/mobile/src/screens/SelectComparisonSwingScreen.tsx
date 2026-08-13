@@ -72,6 +72,8 @@ export function SelectComparisonSwingScreen({ navigation, route }: Props) {
                 })
               }
               testID="comparison-candidate-row"
+              accessibilityRole="button"
+              accessibilityLabel={`Compare with ${item.clubType} swing from ${formatDate(item.createdAt)}`}
             >
               <Text style={styles.rowTitle}>
                 {item.clubType} · {item.cameraView}

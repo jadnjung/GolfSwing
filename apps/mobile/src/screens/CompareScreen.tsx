@@ -1,14 +1,19 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Video from 'react-native-video';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { swingVideoPath } from '../data/swingRepository';
+import { getSwing, swingVideoPath } from '../data/swingRepository';
 import type { HistoryStackParamList } from '../navigation/types';
-import { colors, spacing } from '../theme/theme';
+import { colors, spacing, typography } from '../theme/theme';
 
 type Props = NativeStackScreenProps<HistoryStackParamList, 'Compare'>;
 
 type PlaybackState = 'loading' | 'ready' | 'error';
+
+function formatDate(iso: string): string {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? iso : date.toLocaleDateString();
+}
 
 // MVP item 20: side-by-side comparison. Deliberately not synchronized
 // playback, skeleton overlays, or angle-difference display (PRD 4.4's
@@ -24,10 +29,34 @@ function ComparisonVideo({
   videoTestID: string;
 }) {
   const [playbackState, setPlaybackState] = useState<PlaybackState>('loading');
+  // A real UX gap this fixes: with no label at all, a user comparing two
+  // stacked videos had to guess which was which. Falls back to "Swing" (no
+  // date) if the manifest can't be read — the video itself still plays via
+  // swingVideoPath, which doesn't depend on the manifest at all.
+  const [label, setLabel] = useState('Swing');
   const videoPath = swingVideoPath(swingId);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSwing(swingId)
+      .then(swing => {
+        if (!cancelled) {
+          setLabel(`${swing.clubType} · ${formatDate(swing.createdAt)}`);
+        }
+      })
+      .catch(() => {
+        // Label falls back to "Swing" above; not fatal.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [swingId]);
 
   return (
     <View style={styles.videoSlot}>
+      <Text style={styles.label} testID={`${videoTestID}-label`}>
+        {label}
+      </Text>
       <Video
         source={{ uri: `file://${videoPath}` }}
         style={styles.video}
@@ -68,6 +97,11 @@ const styles = StyleSheet.create({
   videoSlot: {
     flex: 1,
     gap: 4,
+  },
+  label: {
+    ...typography.caption,
+    textAlign: 'center',
+    textTransform: 'capitalize',
   },
   video: {
     flex: 1,

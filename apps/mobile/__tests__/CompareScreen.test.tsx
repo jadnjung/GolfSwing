@@ -4,9 +4,12 @@
 
 import ReactTestRenderer, { act } from 'react-test-renderer';
 import { Text } from 'react-native';
+import { readFile } from '@dr.pogodin/react-native-fs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CompareScreen } from '../src/screens/CompareScreen';
 import type { HistoryStackParamList } from '../src/navigation/types';
+
+const mockedReadFile = readFile as jest.Mock;
 
 type Props = NativeStackScreenProps<HistoryStackParamList, 'Compare'>;
 
@@ -32,6 +35,73 @@ function findText(
 }
 
 describe('CompareScreen', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('labels each video with its own swing so they can be told apart', async () => {
+    // Real UX gap this fixes: with no labels, two stacked videos were
+    // indistinguishable — a user had to guess which was which.
+    mockedReadFile.mockImplementation(async (path: string) => {
+      if (path.includes('swing-a')) {
+        return JSON.stringify({
+          id: 'swing-a',
+          createdAt: '2026-08-01T00:00:00.000Z',
+          clubType: 'driver',
+          cameraView: 'face-on',
+          cameraPosition: 'back',
+          frameRate: 60,
+          durationMs: 3000,
+          analysisStatus: 'pending',
+          handedness: 'right',
+        });
+      }
+      return JSON.stringify({
+        id: 'swing-b',
+        createdAt: '2026-08-05T00:00:00.000Z',
+        clubType: 'iron',
+        cameraView: 'face-on',
+        cameraPosition: 'back',
+        frameRate: 60,
+        durationMs: 3000,
+        analysisStatus: 'pending',
+        handedness: 'right',
+      });
+    });
+
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await act(async () => {
+      tree = ReactTestRenderer.create(
+        <CompareScreen {...mockProps('swing-a', 'swing-b')} />,
+      );
+    });
+
+    const labelA = tree!.root.findByProps({
+      testID: 'compare-video-a-label',
+    });
+    const labelB = tree!.root.findByProps({
+      testID: 'compare-video-b-label',
+    });
+    expect(labelA.props.children).toContain('driver');
+    expect(labelB.props.children).toContain('iron');
+  });
+
+  it("falls back to a generic label if a swing's manifest can't be read", async () => {
+    mockedReadFile.mockRejectedValue(new Error('ENOENT'));
+
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    await act(async () => {
+      tree = ReactTestRenderer.create(
+        <CompareScreen {...mockProps('swing-a', 'swing-b')} />,
+      );
+    });
+
+    expect(
+      tree!.root.findByProps({ testID: 'compare-video-a-label' }).props
+        .children,
+    ).toBe('Swing');
+  });
+
   it('points each video at its own swing', async () => {
     let tree: ReactTestRenderer.ReactTestRenderer;
     await act(async () => {

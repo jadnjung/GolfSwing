@@ -28,12 +28,16 @@ export function Button({
   variant = 'primary',
   disabled,
   style,
+  accessibilityLabel,
   ...pressableProps
 }: ButtonProps) {
   return (
     <Pressable
       {...pressableProps}
       disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityState={{ disabled: disabled === true }}
       style={({ pressed }) => [
         styles.base,
         variant === 'secondary' && styles.secondary,

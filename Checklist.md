@@ -12,7 +12,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 - [x] Monorepo scaffold, version-pinned toolchain, ADR process (`docs/adr/0001`–`0006`)
 - [x] TypeScript strict config, ESLint, Prettier, EditorConfig
-- [x] Shared UI design system (`apps/mobile/src/theme/theme.ts` — color/spacing/radius/typography tokens; `src/components/{Button,Card,Typography,EmptyState}.tsx`) — replaced three independently-duplicated button implementations and a hardcoded-everywhere danger color; full screen-by-screen visual/UX pass beyond the two Critical bugs already fixed (debug text shown to users, dev-note copy on RecordScreen) is deliberately deferred, see Progress.md
+- [x] Shared UI design system (`apps/mobile/src/theme/theme.ts` — color/spacing/radius/typography tokens; `src/components/{Button,Card,Typography,EmptyState}.tsx`) — replaced three independently-duplicated button implementations and a hardcoded-everywhere danger color; app-wide accessibility labels/roles and the deferred design-review follow-ups (HistoryScreen thumbnails, RecordScreen recording indicator, etc.) are in progress, see Progress.md
 - [x] CI pipeline: lint, format, typecheck, test, dependency audit, secret scan (`.github/workflows/pr-checks.yml`)
 - [x] Local machine provisioned and verified (`scripts/doctor.sh`)
 - [x] Governance files: LICENSE, SECURITY.md, CONTRIBUTING.md, PR template, Dependabot
@@ -122,7 +122,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 17. [x] Slow-motion playback (`ReplayScreen`'s 1x/0.5x/0.25x rate buttons, driven by `react-native-video`'s `rate` prop — PRD 5.10 — not build-verified)
 18. [x] Frame-by-frame scrubbing (`ReplayScreen`'s frame-step buttons, seeking by one frame duration computed from the swing's recorded `frameRate` via the new `swingRepository.getSwing` — PRD 5.10 — not build-verified)
 19. [x] Swing tagging (`HistoryScreen`'s tag editor modal — add/remove free-text tags per swing, persisted via `swingRepository.setSwingTags` — PRD 5.11 — not build-verified)
-20. [x] Side-by-side comparison with a previous swing (`SelectComparisonSwingScreen` picks a second swing, `CompareScreen` plays both independently, stacked — no phase sync/overlays yet, those need Phase 2 — not build-verified)
+20. [x] Side-by-side comparison with a previous swing (`SelectComparisonSwingScreen` picks a second swing, `CompareScreen` plays both independently, stacked, each labeled with its own club type + date so they can be told apart — no phase sync/overlays yet, those need Phase 2 — not build-verified)
 21. [x] Local deletion (`HistoryScreen`'s "Delete" button per swing, confirmation via `Alert.alert` including the estimated storage freed, `swingRepository.deleteSwing` removes the whole swing directory — PRD 9.8; `SettingsScreen`'s "Delete all data" control adds the delete-all-data tier, same storage estimate — not build-verified)
 22. [ ] Local export of an annotated video (`ReplayScreen`'s "Export" button shares the raw source video via `react-native-share` — PRD 9.3/5.10 — not "annotated," since overlay data doesn't exist until Phase 2; see `docs/adr/0011-video-export-library.md` — not build-verified)
 23. [x] Privacy and permission screens (privacy notice in `OnboardingScreen`'s first step; camera/mic permission gate already existed in `RecordScreen`, Step 3)

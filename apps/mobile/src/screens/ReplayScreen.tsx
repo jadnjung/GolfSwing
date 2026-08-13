@@ -120,6 +120,9 @@ export function ReplayScreen({ route }: Props) {
             ]}
             onPress={() => setRate(candidateRate)}
             testID={`playback-rate-${candidateRate}x-button`}
+            accessibilityRole="radio"
+            accessibilityLabel={`Playback speed ${candidateRate}x`}
+            accessibilityState={{ checked: rate === candidateRate }}
           >
             <Text style={styles.rateButtonText}>{candidateRate}x</Text>
           </Pressable>
@@ -130,6 +133,8 @@ export function ReplayScreen({ route }: Props) {
           style={styles.frameStepButton}
           onPress={() => stepFrame(-1)}
           testID="frame-step-back-button"
+          accessibilityRole="button"
+          accessibilityLabel="Step back one frame"
         >
           <Text style={styles.frameStepButtonText}>◀ Frame</Text>
         </Pressable>
@@ -137,6 +142,8 @@ export function ReplayScreen({ route }: Props) {
           style={styles.frameStepButton}
           onPress={() => stepFrame(1)}
           testID="frame-step-forward-button"
+          accessibilityRole="button"
+          accessibilityLabel="Step forward one frame"
         >
           <Text style={styles.frameStepButtonText}>Frame ▶</Text>
         </Pressable>
@@ -145,6 +152,8 @@ export function ReplayScreen({ route }: Props) {
         style={styles.exportButton}
         onPress={handleExport}
         testID="export-button"
+        accessibilityRole="button"
+        accessibilityLabel="Export this swing's video"
       >
         <Text style={styles.exportButtonText}>Export</Text>
       </Pressable>

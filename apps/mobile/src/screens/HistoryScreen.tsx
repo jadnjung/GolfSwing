@@ -55,6 +55,8 @@ function SwingRow({
         style={styles.rowContent}
         onPress={onPress}
         testID="swing-row-content"
+        accessibilityRole="button"
+        accessibilityLabel={`${swing.clubType} swing from ${formatDate(swing.createdAt)}, view replay`}
       >
         <Text style={styles.rowTitle}>
           {swing.clubType} · {swing.cameraView}
@@ -73,17 +75,31 @@ function SwingRow({
         ) : null}
       </Pressable>
       <View style={styles.rowActions}>
-        <Pressable onPress={onEditTags} hitSlop={8} testID="edit-tags-button">
+        <Pressable
+          onPress={onEditTags}
+          hitSlop={8}
+          testID="edit-tags-button"
+          accessibilityRole="button"
+          accessibilityLabel={`Edit tags for ${swing.clubType} swing from ${formatDate(swing.createdAt)}`}
+        >
           <Text style={styles.actionText}>Tags</Text>
         </Pressable>
         <Pressable
           onPress={onCompare}
           hitSlop={8}
           testID="compare-swing-button"
+          accessibilityRole="button"
+          accessibilityLabel={`Compare ${swing.clubType} swing from ${formatDate(swing.createdAt)} with another swing`}
         >
           <Text style={styles.actionText}>Compare</Text>
         </Pressable>
-        <Pressable onPress={onDelete} hitSlop={8} testID="delete-swing-button">
+        <Pressable
+          onPress={onDelete}
+          hitSlop={8}
+          testID="delete-swing-button"
+          accessibilityRole="button"
+          accessibilityLabel={`Delete ${swing.clubType} swing from ${formatDate(swing.createdAt)}`}
+        >
           <Text style={styles.deleteText}>Delete</Text>
         </Pressable>
       </View>
@@ -130,6 +146,8 @@ function TagEditorModal({
                 style={styles.tagChip}
                 onPress={() => removeTag(tag)}
                 testID="tag-chip"
+                accessibilityRole="button"
+                accessibilityLabel={`Remove tag ${tag}`}
               >
                 <Text style={styles.tagChipText}>{tag} ✕</Text>
               </Pressable>
@@ -145,13 +163,24 @@ function TagEditorModal({
             placeholderTextColor={colors.textMuted}
             returnKeyType="done"
             testID="tag-input"
+            accessibilityLabel="New tag"
           />
 
           <View style={styles.modalActions}>
-            <Pressable onPress={onClose} testID="tag-editor-cancel">
+            <Pressable
+              onPress={onClose}
+              testID="tag-editor-cancel"
+              accessibilityRole="button"
+              accessibilityLabel="Cancel"
+            >
               <Text style={styles.actionText}>Cancel</Text>
             </Pressable>
-            <Pressable onPress={() => onSave(tags)} testID="tag-editor-save">
+            <Pressable
+              onPress={() => onSave(tags)}
+              testID="tag-editor-save"
+              accessibilityRole="button"
+              accessibilityLabel="Save tags"
+            >
               <Text style={styles.primaryActionText}>Save</Text>
             </Pressable>
           </View>

@@ -27,6 +27,7 @@ import {
   OrientationLocker,
   UNLOCK,
 } from 'react-native-orientation-locker';
+import { Button } from '../components/Button';
 import { OptionRow } from '../components/OptionRow';
 import { colors, spacing } from '../theme/theme';
 import {
@@ -258,13 +259,11 @@ export function RecordScreen() {
               Camera access is required to record a swing. Recordings stay on
               this device.
             </Text>
-            <Pressable
-              style={styles.grantButton}
+            <Button
+              label="Grant camera access"
               onPress={requestCameraAccess}
               testID="grant-camera-access-button"
-            >
-              <Text style={styles.grantButtonText}>Grant camera access</Text>
-            </Pressable>
+            />
           </View>
         ) : device == null ? (
           <Text style={styles.permissionText}>
@@ -305,6 +304,8 @@ export function RecordScreen() {
                   style={[styles.recordCircle, styles.recordCircleActive]}
                   onPress={stopRecording}
                   testID="stop-button"
+                  accessibilityRole="button"
+                  accessibilityLabel="Stop recording"
                 >
                   <View style={styles.stopSquare} />
                 </Pressable>
@@ -316,6 +317,16 @@ export function RecordScreen() {
                     captureStage === 'counting' || captureStage === 'saving'
                   }
                   testID="record-button"
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    captureStage === 'saving'
+                      ? 'Saving swing'
+                      : 'Start recording'
+                  }
+                  accessibilityState={{
+                    disabled:
+                      captureStage === 'counting' || captureStage === 'saving',
+                  }}
                 >
                   {captureStage === 'saving' ? (
                     <Text style={styles.recordCircleSavingText}>…</Text>
@@ -372,6 +383,9 @@ export function RecordScreen() {
           <Text style={styles.rowLabel}>Record audio</Text>
           <Pressable
             onPress={() => setAudioEnabled(!audioEnabled)}
+            accessibilityRole="switch"
+            accessibilityLabel="Record audio"
+            accessibilityState={{ checked: audioEnabled }}
             style={[styles.option, audioEnabled && styles.optionSelected]}
           >
             <Text
@@ -412,16 +426,6 @@ const styles = StyleSheet.create({
   permissionText: {
     color: colors.textMuted,
     fontSize: 14,
-  },
-  grantButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.sm,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  grantButtonText: {
-    color: colors.background,
-    fontWeight: '600',
   },
   previewWrapper: {
     borderRadius: 8,

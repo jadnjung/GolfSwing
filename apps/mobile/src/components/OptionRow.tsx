@@ -23,6 +23,9 @@ export function OptionRow<T extends string | number>({
           <Pressable
             key={option}
             onPress={() => onSelect(option)}
+            accessibilityRole="radio"
+            accessibilityLabel={`${label}: ${option}`}
+            accessibilityState={{ checked: option === selected }}
             style={[
               styles.option,
               option === selected && styles.optionSelected,

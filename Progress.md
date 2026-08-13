@@ -6,6 +6,20 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-13 ~18:00 KST — Accessibility labels app-wide, CompareScreen A/B labels
+
+Continuing the deferred UI/UX design-review list (previous entry), in the priority order recommended: accessibility first (a real gap affecting real users, not just polish), then CompareScreen's missing video labels.
+
+**Accessibility**: zero `accessibilityLabel`/`accessibilityRole` existed anywhere in the app before this — a genuine VoiceOver/TalkBack gap across every screen. Added to the two shared components first for leverage (`Button` now sets `accessibilityRole="button"` and a label defaulting to its `label` prop; `OptionRow` sets `accessibilityRole="radio"` with `accessibilityState.checked` per option) — this alone covers every screen using them. Then added labels/roles individually to every remaining bespoke interactive element: RecordScreen's record/stop circular buttons and audio toggle (`accessibilityRole="switch"`), HistoryScreen's swing rows and their Tags/Compare/Delete actions (each labeled with the specific swing's club type and date, not a generic "Delete"), the tag-editor modal's chips/cancel/save, SelectComparisonSwingScreen's candidate rows, and ReplayScreen's rate/frame-step/export buttons. Also converted RecordScreen's remaining bespoke "Grant camera access" button to the shared `Button` component (removing now-fully-redundant `grantButton`/`grantButtonText` styles) — consistent with the design-system consolidation from the previous entry, and it gets the accessibility behavior for free.
+
+**CompareScreen A/B labels**: a High-priority finding from the review — two stacked videos with zero indication which was which, forcing the user to guess. Each `ComparisonVideo` now fetches its own swing's manifest (`getSwing`, already existed for `ReplayScreen`) and shows a `"driver · 8/1/2026"`-style label above its video; falls back to a generic "Swing" label (not a crash or blank) if the manifest can't be read, since the video itself plays via `swingVideoPath` independent of the manifest.
+
+**Validated**: `pnpm --filter mobile lint/typecheck/test` — 83 tests / 14 suites, all passing (81 existing + 2 new for CompareScreen's label behavior, including the manifest-unreadable fallback). No existing test needed changes for the accessibility additions — every `testID` stayed stable.
+
+Still open from the design review: RecordScreen's recording-in-progress indicator (elapsed timer, pulsing dot) and red record button, the raw-UUID save confirmation, HistoryScreen thumbnails, a real Home dashboard, light mode.
+
+---
+
 ## 2026-08-13 ~17:15 KST — UI/UX design review, design-system foundation, two Critical fixes
 
 The user asked for a full UI/UX design review of the app (framed as "act as a senior mobile designer") — read every screen's actual code plus the design tokens before writing anything, then delivered a screen-by-screen critique with Critical/High/Medium/Low priority tags, following the framework the user specified. Full findings summarized in-conversation, not duplicated here; the headline ones drove this entry's work.
