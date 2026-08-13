@@ -231,6 +231,61 @@ describe('RecordScreen recording flow', () => {
       expect.stringContaining('"handedness": "right"'),
     );
     expect(existsByTestId(tree!, 'save-confirmation')).toBe(true);
+    // A raw UUID here was meaningless to a real user - just a clean
+    // confirmation now, not "Saved swing <uuid>".
+    expect(findText(tree!, 'Swing saved')).toHaveLength(1);
+  });
+
+  it('shows an elapsed-time indicator while recording, gone once it stops', async () => {
+    let finishRecording: (video: unknown) => void = () => {};
+    mockedCamera.mockStartRecording.mockImplementation(
+      (options: { onRecordingFinished: (video: unknown) => void }) => {
+        // Deliberately not invoked immediately, unlike the other tests in
+        // this file - this test needs to observe the 'recording' stage
+        // itself (the indicator, the timer ticking), not just its outcome.
+        finishRecording = options.onRecordingFinished;
+      },
+    );
+
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    act(() => {
+      tree = ReactTestRenderer.create(<RecordScreen />);
+    });
+
+    const [recordButton] = tree!.root.findAllByProps({
+      testID: 'record-button',
+    });
+    act(() => {
+      recordButton!.props.onPress();
+    });
+    for (let tick = 0; tick < 3; tick += 1) {
+      await act(async () => {
+        jest.advanceTimersByTime(1000);
+      });
+    }
+
+    expect(existsByTestId(tree!, 'recording-indicator')).toBe(true);
+    expect(findText(tree!, '0:00')).toHaveLength(1);
+
+    await act(async () => {
+      jest.advanceTimersByTime(3000);
+    });
+    expect(findText(tree!, '0:03')).toHaveLength(1);
+
+    act(() => {
+      finishRecording({
+        path: '/tmp/mock-video.mov',
+        duration: 3.0,
+        width: 1920,
+        height: 1080,
+      });
+    });
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(existsByTestId(tree!, 'recording-indicator')).toBe(false);
   });
 
   it("records the manifest's frameRate clamped to what the device format actually supports", async () => {

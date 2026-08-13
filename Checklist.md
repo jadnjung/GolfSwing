@@ -12,7 +12,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 - [x] Monorepo scaffold, version-pinned toolchain, ADR process (`docs/adr/0001`–`0006`)
 - [x] TypeScript strict config, ESLint, Prettier, EditorConfig
-- [x] Shared UI design system (`apps/mobile/src/theme/theme.ts` — color/spacing/radius/typography tokens; `src/components/{Button,Card,Typography,EmptyState}.tsx`) — replaced three independently-duplicated button implementations and a hardcoded-everywhere danger color; app-wide accessibility labels/roles and the deferred design-review follow-ups (HistoryScreen thumbnails, RecordScreen recording indicator, etc.) are in progress, see Progress.md
+- [x] Shared UI design system (`apps/mobile/src/theme/theme.ts` — color/spacing/radius/typography tokens; `src/components/{Button,Card,Typography,EmptyState}.tsx`) — replaced three independently-duplicated button implementations and a hardcoded-everywhere danger color; app-wide accessibility labels/roles, CompareScreen A/B labels, and RecordScreen's recording indicator (elapsed timer, pulsing dot, red record button, no more raw-UUID confirmation) are done — HistoryScreen thumbnails and a real Home dashboard still open, see Progress.md
 - [x] CI pipeline: lint, format, typecheck, test, dependency audit, secret scan (`.github/workflows/pr-checks.yml`)
 - [x] Local machine provisioned and verified (`scripts/doctor.sh`)
 - [x] Governance files: LICENSE, SECURITY.md, CONTRIBUTING.md, PR template, Dependabot

@@ -6,6 +6,24 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-13 ~18:30 KST — RecordScreen recording indicator, red record button, clean save confirmation
+
+Continuing the deferred UI/UX design-review list (previous two entries) — the last of the RecordScreen-specific findings.
+
+**Recording-in-progress indicator (Critical/High finding)**: previously the only visual change once recording started was the button becoming a stop-square — no elapsed timer, no pulsing dot, unlike every mainstream camera app. Added both: a small pill overlay (top-left of the preview) showing a pulsing red dot (`Animated.loop`, native driver, no new dependency) and an `M:SS` elapsed timer, driven by a `setInterval` scoped to `captureStage === 'recording'` and reset to zero otherwise.
+
+**Record button color (High finding)**: was `colors.primary` (brand green) for both idle and recording states. Green reads as "safe/go," the wrong signal for "start recording" — red is the near-universal convention specifically because it signals "this is happening now, be deliberate" (iOS Camera, Instagram, TikTok all use it). Both idle and active states now use `colors.danger`; only the icon inside (nothing vs. a white square) differentiates state, matching how those apps actually behave, not a simplification of a real distinction.
+
+**Raw UUID in the save confirmation (High finding)**: `"Saved swing {uuid}"` — meaningless to a real user, who has no reason to identify a swing by id (they'd find it in History instead). Replaced with a clean "Swing saved" message plus a check icon (same `lucide-react-native` deep-import pattern as everywhere else, ADR 0012).
+
+**Also cleaned up while touching these styles**: RecordScreen had its own hardcoded `#D14343` (now `colors.danger`) in two places — the last stray hardcoded danger-red instances outside the shared token, closing that gap from the original design-system review finding.
+
+**Validated**: `pnpm -r lint/typecheck/test` — 84 tests / 14 suites, all passing. Added a dedicated test that drives an actual in-progress recording (via a captured, not immediately-invoked, `onRecordingFinished` callback — the other tests in this file finish synchronously, which can't observe the `'recording'` stage itself) to verify the indicator appears, the timer actually ticks (`0:00` → `0:03` across 3 fake-timer seconds), and it disappears once recording ends. Also strengthened the existing save-confirmation test to check for the new "Swing saved" text specifically, not just testID presence.
+
+Still open from the design review: HistoryScreen thumbnails (the largest remaining item — needs video-frame extraction) and a real Home dashboard. Light mode remains explicitly out of scope for this pass per the user's earlier decision.
+
+---
+
 ## 2026-08-13 ~18:00 KST — Accessibility labels app-wide, CompareScreen A/B labels
 
 Continuing the deferred UI/UX design-review list (previous entry), in the priority order recommended: accessibility first (a real gap affecting real users, not just polish), then CompareScreen's missing video labels.

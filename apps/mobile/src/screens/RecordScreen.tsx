@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  Animated,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -7,6 +8,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import Check from 'lucide-react-native/icons/check';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useIsFocused } from '@react-navigation/native';
 import {
@@ -46,6 +48,12 @@ const FRAME_RATES: FrameRate[] = [120, 60, 30];
 type CaptureStage =
   'idle' | 'counting' | 'recording' | 'saving' | 'saved' | 'error';
 
+function formatElapsed(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
 function createSwingId(): string {
   // RFC4122-v4-shaped id without a crypto.randomUUID dependency — Hermes
   // support for it can't be confirmed without a real device/build. Bitwise
@@ -70,6 +78,12 @@ export function RecordScreen() {
   const [countdownRemaining, setCountdownRemaining] = useState(0);
   const [savedSwingId, setSavedSwingId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Elapsed-time display while recording — the only previous indicator that
+  // recording was in progress was the button itself changing to a stop
+  // icon, with no timer or pulsing dot. Every camera app (iOS Camera,
+  // Instagram, TikTok) shows this; its absence reads as broken, not minimal.
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const pulseOpacity = useRef(new Animated.Value(1)).current;
 
   const cameraRef = useRef<Camera>(null);
 
@@ -227,6 +241,40 @@ export function RecordScreen() {
     await cameraRef.current?.stopRecording();
   }, []);
 
+  useEffect(() => {
+    if (captureStage !== 'recording') {
+      setRecordingSeconds(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setRecordingSeconds(seconds => seconds + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [captureStage]);
+
+  useEffect(() => {
+    if (captureStage !== 'recording') {
+      pulseOpacity.setValue(1);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseOpacity, {
+          toValue: 0.3,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseOpacity, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [captureStage, pulseOpacity]);
+
   return (
     // Bottom edge excluded — the bottom tab navigator already accounts
     // for the home indicator inset for its own bar.
@@ -295,13 +343,24 @@ export function RecordScreen() {
                 </View>
               ) : null}
 
+              {captureStage === 'recording' ? (
+                <View style={styles.recordingIndicator} testID="recording-indicator">
+                  <Animated.View
+                    style={[styles.recordingDot, { opacity: pulseOpacity }]}
+                  />
+                  <Text style={styles.recordingTimerText}>
+                    {formatElapsed(recordingSeconds)}
+                  </Text>
+                </View>
+              ) : null}
+
               {/* Circular and overlaid on the preview, not a full-width row
                   below it — the record button is the one control needed
                   during recording itself, so it shouldn't cost a whole row
                   of the screen the preview could otherwise use. */}
               {captureStage === 'recording' ? (
                 <Pressable
-                  style={[styles.recordCircle, styles.recordCircleActive]}
+                  style={styles.recordCircle}
                   onPress={stopRecording}
                   testID="stop-button"
                   accessibilityRole="button"
@@ -335,10 +394,14 @@ export function RecordScreen() {
               )}
             </View>
 
+            {/* A raw UUID here was meaningless to a real user — this is
+                purely a confirmation the save succeeded, not something the
+                user needs to identify by id (find it in History instead). */}
             {savedSwingId != null ? (
-              <Text style={styles.confirmationText} testID="save-confirmation">
-                Saved swing {savedSwingId}
-              </Text>
+              <View style={styles.confirmationRow} testID="save-confirmation">
+                <Check color={colors.primary} size={16} />
+                <Text style={styles.confirmationText}>Swing saved</Text>
+              </View>
             ) : null}
             {errorMessage != null ? (
               <Text style={styles.errorText}>{errorMessage}</Text>
@@ -434,6 +497,12 @@ const styles = StyleSheet.create({
   },
   // Overlaid on the preview (position: absolute), not a full-width row
   // below it — see the comment at its usage site.
+  // Red, not the brand green — a near-universal convention (iOS Camera,
+  // Instagram, TikTok) specifically because it signals "this is happening
+  // now, be deliberate," which green ("safe/go") does not. Same color idle
+  // and recording (only the icon inside changes) — that's genuinely
+  // consistent with those apps too, not a simplification of a real
+  // distinction.
   recordCircle: {
     position: 'absolute',
     top: '50%',
@@ -442,14 +511,11 @@ const styles = StyleSheet.create({
     width: 76,
     height: 76,
     borderRadius: 38,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.danger,
     borderWidth: 4,
     borderColor: 'rgba(255, 255, 255, 0.85)',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  recordCircleActive: {
-    backgroundColor: '#D14343',
   },
   stopSquare: {
     width: 24,
@@ -473,12 +539,41 @@ const styles = StyleSheet.create({
     fontSize: 48,
     fontWeight: '700',
   },
+  recordingIndicator: {
+    position: 'absolute',
+    top: spacing.sm,
+    left: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: 'rgba(11, 15, 20, 0.6)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: 999,
+  },
+  recordingDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.danger,
+  },
+  recordingTimerText: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
+  },
+  confirmationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
   confirmationText: {
     color: colors.primary,
     fontSize: 13,
   },
   errorText: {
-    color: '#D14343',
+    color: colors.danger,
     fontSize: 13,
   },
   row: {
