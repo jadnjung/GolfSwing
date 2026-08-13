@@ -6,6 +6,24 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-13 ~19:15 KST — HistoryScreen thumbnails (ADR 0015)
+
+Closes the last, largest item from the UI/UX design review's list: `HistoryScreen`'s pure-text rows had no visual recall aid for what's inherently a visual medium (video). Reviewed a candidate library the same way every other dependency this session has been: `react-native-create-thumbnail` (305 stars, ~26,600 weekly downloads, MIT, latest published ~8.5 months ago) chosen over a newer Nitro-based alternative (`react-native-media-toolkit` — 73 stars, solo maintainer, ~2-month-old latest release, the same thin-track-record profile already rejected elsewhere, e.g. ADR 0014's rejection of `react-native-mediapipe-posedetection`). Full reasoning in `docs/adr/0015-history-thumbnail-library.md`.
+
+**Real finding during integration, not anticipated up front**: the library's own bundled Android manifest unconditionally declares `WRITE_EXTERNAL_STORAGE`/`READ_EXTERNAL_STORAGE` — permissions this app doesn't need at all, since every swing's video and its new thumbnail live in app-private storage, same as everything else this app already reads/writes. Silently accepting those would have expanded this privacy-focused app's permission footprint for something the actual feature doesn't need — stripped both via Android's manifest-merger `tools:node="remove"` in `AndroidManifest.xml` rather than accepted by default.
+
+**Built**: `swingRepository.getSwingThumbnail(swingId)` — generates a thumbnail once via `createThumbnail`, then moves it into the swing's *own* directory (`thumbnail.jpg` next to `source.mp4`), not the library's separate cache — specifically so `deleteSwing`'s existing `unlink(swingDir)` cleans it up automatically too, actually satisfying a PRD 9.8 requirement that was already sitting in a code comment on `deleteSwing` since it was written ("deleting a swing must remove the original video, thumbnail, pose data, metrics, and feedback together"). `HistoryScreen`'s `SwingRow` now shows this thumbnail via a new `SwingThumbnail` component, falling back to a placeholder icon (not a crash or blank space) while loading or if generation fails.
+
+**Two more real bugs hit and fixed during setup, not just implementation**: the package ships no Jest mock (same pattern as every other native library this session) — it destructures `NativeModules.CreateThumbnail.create` at import time, which throws immediately in the test environment; added a manual mock. It also needed adding to `jest.config.js`'s `transformIgnorePatterns` list (same pnpm-nested-node_modules ESM-transform issue hit repeatedly this session, e.g. `lucide-react-native` in Step 19).
+
+**Validated**: `pnpm -r lint/typecheck/test` — 89 tests / 14 suites, all passing. New tests cover: the thumbnail actually renders with the right cached path, the placeholder fallback on generation failure, `getSwingThumbnail` skipping regeneration when a cached thumbnail already exists, and (directly testing the deletion-cleanup reasoning above) that the generated file gets moved into the swing's own directory, not left elsewhere.
+
+**Not yet build-verified** — this is a new native dependency, so (like every other native addition this session) it needs a real device/simulator rebuild (`pod install` + `xcodebuild`/`./gradlew`) before it's confirmed working on actual hardware, not just logic-verified via mocks.
+
+This closes every item from the original design review except a real Home dashboard (currently an honest placeholder, a genuine feature build not a styling task) and light mode (explicitly deferred by the user's own earlier decision).
+
+---
+
 ## 2026-08-13 ~18:30 KST — RecordScreen recording indicator, red record button, clean save confirmation
 
 Continuing the deferred UI/UX design-review list (previous two entries) — the last of the RecordScreen-specific findings.

@@ -1,7 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   FlatList,
+  Image,
   Modal,
   Pressable,
   StyleSheet,
@@ -11,16 +12,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import VideoIcon from 'lucide-react-native/icons/video';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Swing } from '@golf-swing/domain';
 import {
   deleteSwing,
   getSwingSizeBytes,
+  getSwingThumbnail,
   listSwings,
   setSwingTags,
 } from '../data/swingRepository';
 import type { HistoryStackParamList } from '../navigation/types';
-import { colors, spacing } from '../theme/theme';
+import { colors, radii, spacing } from '../theme/theme';
 import { formatBytes } from '../utils/formatBytes';
 
 type Props = NativeStackScreenProps<HistoryStackParamList, 'HistoryList'>;
@@ -34,6 +37,45 @@ function formatDuration(durationMs: number): string {
 function formatDate(iso: string): string {
   const date = new Date(iso);
   return Number.isNaN(date.getTime()) ? iso : date.toLocaleString();
+}
+
+// ADR 0015: a swing history is inherently visual (it's video) — pure text
+// rows meant finding "that swing from yesterday" had no visual recall aid
+// at all. Generated/cached per swing (getSwingThumbnail), not blocking:
+// falls back to a placeholder icon while loading or if generation fails,
+// never a broken image or a blank row.
+function SwingThumbnail({ swingId }: { swingId: string }) {
+  const [thumbnailPath, setThumbnailPath] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSwingThumbnail(swingId).then(path => {
+      if (!cancelled && path != null) {
+        setThumbnailPath(path);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [swingId]);
+
+  if (thumbnailPath != null) {
+    return (
+      <Image
+        source={{ uri: `file://${thumbnailPath}` }}
+        style={styles.thumbnail}
+        testID="swing-thumbnail"
+      />
+    );
+  }
+  return (
+    <View
+      style={[styles.thumbnail, styles.thumbnailPlaceholder]}
+      testID="swing-thumbnail-placeholder"
+    >
+      <VideoIcon color={colors.textMuted} size={20} />
+    </View>
+  );
 }
 
 function SwingRow({
@@ -58,21 +100,24 @@ function SwingRow({
         accessibilityRole="button"
         accessibilityLabel={`${swing.clubType} swing from ${formatDate(swing.createdAt)}, view replay`}
       >
-        <Text style={styles.rowTitle}>
-          {swing.clubType} · {swing.cameraView}
-        </Text>
-        <Text style={styles.rowSubtitle}>
-          {formatDate(swing.createdAt)} · {formatDuration(swing.durationMs)}
-        </Text>
-        {swing.tags.length > 0 ? (
-          <View style={styles.tagList}>
-            {swing.tags.map(tag => (
-              <View key={tag} style={styles.tagChip}>
-                <Text style={styles.tagChipText}>{tag}</Text>
-              </View>
-            ))}
-          </View>
-        ) : null}
+        <SwingThumbnail swingId={swing.id} />
+        <View style={styles.rowText}>
+          <Text style={styles.rowTitle}>
+            {swing.clubType} · {swing.cameraView}
+          </Text>
+          <Text style={styles.rowSubtitle}>
+            {formatDate(swing.createdAt)} · {formatDuration(swing.durationMs)}
+          </Text>
+          {swing.tags.length > 0 ? (
+            <View style={styles.tagList}>
+              {swing.tags.map(tag => (
+                <View key={tag} style={styles.tagChip}>
+                  <Text style={styles.tagChipText}>{tag}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+        </View>
       </Pressable>
       <View style={styles.rowActions}>
         <Pressable
@@ -345,6 +390,24 @@ const styles = StyleSheet.create({
   },
   rowContent: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  rowText: {
+    flex: 1,
+  },
+  thumbnail: {
+    width: 64,
+    height: 64,
+    borderRadius: radii.sm,
+    backgroundColor: colors.surface,
+  },
+  thumbnailPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   rowActions: {
     flexDirection: 'row',

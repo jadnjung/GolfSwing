@@ -11,8 +11,11 @@ import {
   unlink,
   writeFile,
 } from '@dr.pogodin/react-native-fs';
+import { createThumbnail } from 'react-native-create-thumbnail';
 import { HistoryScreen } from '../src/screens/HistoryScreen';
 import type { HistoryStackParamList } from '../src/navigation/types';
+
+const mockedCreateThumbnail = createThumbnail as jest.Mock;
 
 // HistoryScreen renders standalone here (no real NavigationContainer/Screen),
 // so useFocusEffect would otherwise throw looking for navigation context it
@@ -98,6 +101,16 @@ describe('HistoryScreen', () => {
     });
     tree = undefined;
     jest.clearAllMocks();
+    // clearAllMocks doesn't reset a mockRejectedValue override - restore
+    // the module mock's default so a failure case in one test can't leak
+    // into the next.
+    mockedCreateThumbnail.mockResolvedValue({
+      path: '/mock/cache/thumbnail.jpg',
+      size: 1000,
+      mime: 'image/jpeg',
+      width: 100,
+      height: 100,
+    });
   });
 
   it('shows an empty state when no swings are recorded', async () => {
@@ -127,6 +140,47 @@ describe('HistoryScreen', () => {
       tree!.root.findAllByProps({ testID: 'swing-row' }).length,
     ).toBeGreaterThan(0);
     expect(findText(tree!, text => text.includes('driver'))).toHaveLength(1);
+  });
+
+  it("shows a generated thumbnail for each swing's video", async () => {
+    // ADR 0015: HistoryScreen showed pure text before this - a swing
+    // history is inherently visual, and finding a specific swing by
+    // reading club-type/date text alone was real friction.
+    mockOneSavedSwing();
+
+    await act(async () => {
+      tree = ReactTestRenderer.create(
+        <HistoryScreen {...mockNavigationProps()} />,
+      );
+    });
+
+    const thumbnail = tree!.root.findByProps({ testID: 'swing-thumbnail' });
+    expect(thumbnail.props.source.uri).toBe(
+      'file:///mock/documents/swings/swing-1/thumbnail.jpg',
+    );
+    expect(
+      tree!.root.findAllByProps({ testID: 'swing-thumbnail-placeholder' })
+        .length,
+    ).toBe(0);
+  });
+
+  it("falls back to a placeholder if a swing's thumbnail can't be generated", async () => {
+    mockOneSavedSwing();
+    mockedCreateThumbnail.mockRejectedValue(new Error('decode failed'));
+
+    await act(async () => {
+      tree = ReactTestRenderer.create(
+        <HistoryScreen {...mockNavigationProps()} />,
+      );
+    });
+
+    expect(
+      tree!.root.findAllByProps({ testID: 'swing-thumbnail-placeholder' })
+        .length,
+    ).toBeGreaterThan(0);
+    expect(
+      tree!.root.findAllByProps({ testID: 'swing-thumbnail' }).length,
+    ).toBe(0);
   });
 
   it('reloads the swing list on every focus, not just the first mount', async () => {

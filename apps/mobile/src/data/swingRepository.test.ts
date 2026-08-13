@@ -1,15 +1,18 @@
 import {
   exists,
+  moveFile,
   readDir,
   readFile,
   unlink,
   writeFile,
 } from '@dr.pogodin/react-native-fs';
+import { createThumbnail } from 'react-native-create-thumbnail';
 import {
   deleteAllSwings,
   deleteSwing,
   getSwing,
   getSwingSizeBytes,
+  getSwingThumbnail,
   getTotalSwingsSizeBytes,
   listSwings,
   setSwingTags,
@@ -21,6 +24,8 @@ const mockedReadFile = readFile as jest.Mock;
 const mockedUnlink = unlink as jest.Mock;
 const mockedExists = exists as jest.Mock;
 const mockedWriteFile = writeFile as jest.Mock;
+const mockedMoveFile = moveFile as jest.Mock;
+const mockedCreateThumbnail = createThumbnail as jest.Mock;
 
 function dirEntry(path: string, size = 0) {
   return {
@@ -155,6 +160,53 @@ describe('getSwing', () => {
   it('throws rather than returning a corrupt manifest', async () => {
     mockedReadFile.mockResolvedValue('not valid json{{{');
     await expect(getSwing('swing-1')).rejects.toThrow();
+  });
+});
+
+describe('getSwingThumbnail', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('returns the cached thumbnail path without regenerating if one already exists', async () => {
+    mockedExists.mockResolvedValue(true);
+    await expect(getSwingThumbnail('swing-1')).resolves.toBe(
+      '/mock/documents/swings/swing-1/thumbnail.jpg',
+    );
+    expect(mockedCreateThumbnail).not.toHaveBeenCalled();
+  });
+
+  it("generates and caches a thumbnail inside the swing's own directory when none exists yet", async () => {
+    mockedExists.mockResolvedValue(false);
+    mockedCreateThumbnail.mockResolvedValue({
+      path: '/mock/cache/generated-thumbnail.jpg',
+      size: 1000,
+      mime: 'image/jpeg',
+      width: 100,
+      height: 100,
+    });
+
+    await expect(getSwingThumbnail('swing-1')).resolves.toBe(
+      '/mock/documents/swings/swing-1/thumbnail.jpg',
+    );
+    expect(mockedCreateThumbnail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: '/mock/documents/swings/swing-1/source.mp4',
+      }),
+    );
+    // Cached inside the swing's own directory, not the thumbnail library's
+    // separate cache - specifically so deleteSwing's existing
+    // unlink(swingDir) cleans it up too (PRD 9.8, ADR 0015).
+    expect(mockedMoveFile).toHaveBeenCalledWith(
+      '/mock/cache/generated-thumbnail.jpg',
+      '/mock/documents/swings/swing-1/thumbnail.jpg',
+    );
+  });
+
+  it('returns null (not a throw) if generation fails', async () => {
+    mockedExists.mockResolvedValue(false);
+    mockedCreateThumbnail.mockRejectedValue(new Error('decode failed'));
+    await expect(getSwingThumbnail('swing-1')).resolves.toBeNull();
   });
 });
 

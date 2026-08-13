@@ -12,6 +12,7 @@ const modulesToTransform = [
   'react-native-screens',
   'react-native-svg',
   'lucide-react-native',
+  'react-native-create-thumbnail',
 ];
 
 module.exports = {

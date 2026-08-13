@@ -19,6 +19,7 @@
     "lucide-react-native": "^1.28.0",
     "react": "19.1.4",
     "react-native": "0.81.6",
+    "react-native-create-thumbnail": "2.2.0",
     "react-native-orientation-locker": "1.7.0",
     "react-native-safe-area-context": "^5.5.2",
     "react-native-screens": "4.24.0",

@@ -1,11 +1,13 @@
 import {
   DocumentDirectoryPath,
   exists,
+  moveFile,
   readDir,
   readFile,
   unlink,
   writeFile,
 } from '@dr.pogodin/react-native-fs';
+import { createThumbnail } from 'react-native-create-thumbnail';
 import { parseSwingManifest, type Swing } from '@golf-swing/domain';
 
 export const SWINGS_ROOT = `${DocumentDirectoryPath}/swings`;
@@ -17,6 +19,42 @@ function manifestPath(swingId: string): string {
 /** Path to a saved swing's source video, per the layout RecordScreen writes. */
 export function swingVideoPath(swingId: string): string {
   return `${SWINGS_ROOT}/${swingId}/source.mp4`;
+}
+
+function swingThumbnailPath(swingId: string): string {
+  return `${SWINGS_ROOT}/${swingId}/thumbnail.jpg`;
+}
+
+/**
+ * Returns a cached thumbnail image path for a swing's video (ADR 0015 —
+ * HistoryScreen showed pure text rows before this, a real "can't visually
+ * find that swing" gap for what's inherently a visual medium). Generated
+ * once and cached inside the swing's own directory — not the thumbnail
+ * library's own separate cache — specifically so `deleteSwing`'s existing
+ * `unlink(swingDir)` cleans it up automatically, satisfying PRD 9.8's
+ * requirement that deleting a swing removes "the original video,
+ * thumbnail, pose data, metrics, and feedback together," not just some of
+ * them.
+ *
+ * Returns `null` (not a throw) if generation fails — a missing thumbnail
+ * is a degraded row, not a broken screen.
+ */
+export async function getSwingThumbnail(swingId: string): Promise<string | null> {
+  const cachedPath = swingThumbnailPath(swingId);
+  if (await exists(cachedPath)) {
+    return cachedPath;
+  }
+  try {
+    const result = await createThumbnail({
+      url: swingVideoPath(swingId),
+      timeStamp: 500,
+    });
+    await moveFile(result.path, cachedPath);
+    return cachedPath;
+  } catch (error) {
+    console.warn(`Could not generate thumbnail for swing ${swingId}:`, error);
+    return null;
+  }
 }
 
 /**

@@ -53,6 +53,9 @@ importers:
       react-native:
         specifier: 0.81.6
         version: 0.81.6(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.9.3))(@react-native/metro-config@0.81.6(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.1.4)
+      react-native-create-thumbnail:
+        specifier: 2.2.0
+        version: 2.2.0
       react-native-orientation-locker:
         specifier: 1.7.0
         version: 1.7.0(react-native@0.81.6(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.9.3))(@react-native/metro-config@0.81.6(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.1.4))(react@19.1.4)
@@ -3341,6 +3344,9 @@ packages:
 
   react-is@19.2.8:
     resolution: {integrity: sha512-s5un28nYxKJw5gvUHyW5PCC28CvBqLu9r3cWgzHT4Vo/5fqqkFcdRYsGcKf50WMPpjjFZS5d76fn3YCo2njKwQ==}
+
+  react-native-create-thumbnail@2.2.0:
+    resolution: {integrity: sha512-zrwVYWMpeMEGIYO1jgwUMBpSpIzMR7Z2gkSANVlf9BFZLRw017k7CfjttvDhCHjsxNNDb7+V8uJaNwIGdTpz/g==}
 
   react-native-orientation-locker@1.7.0:
     resolution: {integrity: sha512-2PhG4UyRJktb3KCTISStuu8/q+Q3q3oPesGg9DhdY0b6Cu/ZzxkCvkbJte2TPWRYkS0JpClimvqVaonulGvDrA==}
@@ -8290,6 +8296,8 @@ snapshots:
   react-is@18.3.1: {}
 
   react-is@19.2.8: {}
+
+  react-native-create-thumbnail@2.2.0: {}
 
   react-native-orientation-locker@1.7.0(react-native@0.81.6(@babel/core@7.29.7)(@react-native-community/cli@20.0.0(typescript@5.9.3))(@react-native/metro-config@0.81.6(@babel/core@7.29.7))(@types/react@19.2.18)(react@19.1.4))(react@19.1.4):
     dependencies:

@@ -109,6 +109,21 @@ jest.mock('react-native-orientation-locker', () => {
   };
 });
 
+// react-native-create-thumbnail ships no Jest mock — it destructures
+// `NativeModules.CreateThumbnail.create` at import time, which throws
+// immediately in the test environment since that native module doesn't
+// exist. Resolves a plausible thumbnail result by default; tests override
+// per-case (a real thumbnail vs. a generation failure).
+jest.mock('react-native-create-thumbnail', () => ({
+  createThumbnail: jest.fn(async () => ({
+    path: '/mock/cache/thumbnail.jpg',
+    size: 1000,
+    mime: 'image/jpeg',
+    width: 100,
+    height: 100,
+  })),
+}));
+
 // react-native-share ships no Jest mock — its share sheet is entirely
 // native-backed. Tests configure open()'s resolved/rejected value per case
 // (success, user-cancelled, genuine failure).

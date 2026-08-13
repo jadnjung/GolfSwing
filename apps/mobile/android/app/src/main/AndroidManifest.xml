@@ -1,8 +1,25 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- react-native-create-thumbnail's own manifest declares these two -
+         they're for reading/writing external/shared storage (SD card,
+         legacy Android versions), which this app never touches: every
+         swing's video and thumbnail live in app-private storage
+         (DocumentDirectoryPath), the same as everything else this app
+         already reads/writes without needing them. Stripped via manifest
+         merger rather than silently expanding this privacy-focused app's
+         permission footprint for a permission the actual feature doesn't
+         need. -->
+    <uses-permission
+      android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+      tools:node="remove" />
+    <uses-permission
+      android:name="android.permission.READ_EXTERNAL_STORAGE"
+      tools:node="remove" />
 
     <application
       android:name=".MainApplication"
