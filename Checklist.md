@@ -52,7 +52,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 ## Phase 2: Pose Analysis MVP (PRD 16)
 
 - [ ] Pose inference (`native/ios-pose-inference`, `native/android-pose-inference` — shortlisted to `react-native-fast-tflite` + BlazePose, see `docs/adr/0014-pose-inference-shortlist.md`; still not accepted pending real-device benchmarking)
-- [ ] Skeleton overlay
+- [ ] Skeleton overlay (rendering component built and unit-tested against synthetic landmarks — `apps/mobile/src/components/SkeletonOverlay.tsx`, `packages/domain`'s `PoseFrame`/`SKELETON_CONNECTIONS` — deliberately not wired into any real screen yet, since there's no pose-inference pipeline producing real data until Phase 2)
 - [ ] Landmark smoothing
 - [ ] Phase estimation
 - [ ] Core angles (`packages/analysis-engine` — the PRD 5.3 angle formula itself is implemented and tested; applying it to real named joint angles needs real landmark data, which nothing produces yet)

@@ -6,6 +6,20 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-13 ~23:45 KST — Pose skeleton overlay component (Phase 2 item 10)
+
+Continuing the same "build what's genuinely unblocked" thread as the swing-segment work. Added a shared `PoseLandmarkName`/`PoseLandmark`/`PoseFrame` type and a `SKELETON_CONNECTIONS` bone list to `packages/domain` (`pose.ts`), reusing `docs/architecture/swing-angle-definitions.md`'s existing model-independent landmark set rather than inventing a second vocabulary — that document already exists specifically so analysis-engine's angle formulas and any future overlay agree on one set of names.
+
+Built `apps/mobile/src/components/SkeletonOverlay.tsx` on top of it: an SVG overlay (`react-native-svg`, a dependency that's been sitting in `package.json` unused since Step 2) that draws a joint circle per confident landmark and a line per bone whose both endpoints are confident, scaling normalized `[0, 1]` landmark coordinates to whatever pixel size the caller gives it. **Deliberately not mounted on any real screen** — there's no pose-inference pipeline producing real `PoseFrame` data until Phase 2 (still blocked on ADR 0014's real-device benchmarking), and rendering it against fake data on a real screen would misrepresent working pose analysis to the user, the same "no fake content shown to users" bar this session's earlier Critical-bug fixes established.
+
+**Real bug found while testing, not anticipated up front**: `react-native-svg`'s `<Svg>` component schedules work past the initial synchronous render; without flushing a tick inside `act()`, Jest tears the test environment down before that work runs and every test fails with "trying to import a file after the Jest environment has been torn down." Root-caused with a minimal standalone repro before touching the real test file, fixed by wrapping render in `await act(async () => { ...; await new Promise(resolve => setImmediate(...)); })`.
+
+Domain: 26/26 tests pass (4 new). Mobile: 99/99 pass (6 new). Repo-wide `typecheck`/`lint`/`test`/`format` all pass.
+
+Updated `Checklist.md`'s "Skeleton overlay" line to reflect what's actually built vs. still blocked.
+
+---
+
 ## 2026-08-13 ~23:10 KST — Swing-event detection feasibility report + segmentation algorithm
 
 User asked to skip light mode entirely (not just defer it — a firm "I don't want light mode"), so that's removed from the open-items list rather than left flagged for later. Picked up MVP item 8 next: "Automatic swing-event detection where reliable" — the app auto-catching swing start/end to trim recordings, which is also exactly what the user asked for earlier this session for comparison-video alignment. It's been sitting completely unstarted.
