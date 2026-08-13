@@ -117,7 +117,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 12. [ ] Basic golf swing phase detection
 13. [ ] Post-swing feedback
 14. [x] Local swing storage
-15. [x] Swing-history screen (each row now shows a real video-frame thumbnail — `react-native-create-thumbnail`, `docs/adr/0015-history-thumbnail-library.md` — generated once and cached in the swing's own directory; not yet build-verified, a new native dependency needs a real device/simulator rebuild)
+15. [x] Swing-history screen (each row now shows a real video-frame thumbnail — `react-native-create-thumbnail`, `docs/adr/0015-history-thumbnail-library.md` — generated once and cached in the swing's own directory; build-verified on both a real iOS simulator and Android emulator, though not yet with an actual recorded swing on real hardware)
 16. [x] Video replay
 17. [x] Slow-motion playback (`ReplayScreen`'s 1x/0.5x/0.25x rate buttons, driven by `react-native-video`'s `rate` prop — PRD 5.10 — not build-verified)
 18. [x] Frame-by-frame scrubbing (`ReplayScreen`'s frame-step buttons, seeking by one frame duration computed from the swing's recorded `frameRate` via the new `swingRepository.getSwing` — PRD 5.10 — not build-verified)

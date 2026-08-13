@@ -6,6 +6,22 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-13 ~21:45 KST — Build-verified the whole UI/UX batch on both platforms
+
+The user's iPhone wasn't connected at the time ("unavailable" in `devicectl`), so verified everything possible without it: `pod install` (linked `react-native-create-thumbnail` cleanly) + `xcodebuild` for a real iOS Simulator, and `./gradlew assembleDebug` for a real Android emulator — both succeeded. Installed and launched on both; screenshotted Home, History, Training, and Settings.
+
+**Confirmed working correctly, visually, on real builds** (not just logic-verified via mocks): the redesigned OnboardingScreen (three check-icon guarantee rows, `Button` component) on iOS; Home/Training's honest placeholder cards, History's empty state, and Settings' `danger`-variant `Button` (red outline, no fill) on Android — and critically, the "Active tab: X" debug text is genuinely gone from all of them, confirmed by screenshot, not just by reading the diff.
+
+**Also directly verified** (not just trusted from the ADR's reasoning): pulled the actual merged `AndroidManifest.xml` from the build output and confirmed `WRITE_EXTERNAL_STORAGE`/`READ_EXTERNAL_STORAGE` are genuinely absent — the `tools:node="remove"` manifest-merger fix from ADR 0015 works as intended, not just in theory.
+
+**Honest gap**: neither the iOS Simulator nor the fresh Android emulator install had any previously-recorded swings, so the actual thumbnail-generation codepath (`getSwingThumbnail` calling `createThumbnail` against a real video file) still hasn't been exercised end-to-end on real hardware — only compile/link/boot success plus the mocked JS tests. That real confirmation needs either a swing recorded fresh on-device, or the user's iPhone (which already has swings from earlier testing) reconnected and rebuilt.
+
+Updated `docs/adr/0015-history-thumbnail-library.md` and `Checklist.md` item 15 to record what was and wasn't confirmed here.
+
+Shut down the simulator and emulator afterward, per the established pattern this session.
+
+---
+
 ## 2026-08-13 ~19:15 KST — HistoryScreen thumbnails (ADR 0015)
 
 Closes the last, largest item from the UI/UX design review's list: `HistoryScreen`'s pure-text rows had no visual recall aid for what's inherently a visual medium (video). Reviewed a candidate library the same way every other dependency this session has been: `react-native-create-thumbnail` (305 stars, ~26,600 weekly downloads, MIT, latest published ~8.5 months ago) chosen over a newer Nitro-based alternative (`react-native-media-toolkit` — 73 stars, solo maintainer, ~2-month-old latest release, the same thin-track-record profile already rejected elsewhere, e.g. ADR 0014's rejection of `react-native-mediapipe-posedetection`). Full reasoning in `docs/adr/0015-history-thumbnail-library.md`.
