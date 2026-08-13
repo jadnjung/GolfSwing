@@ -106,7 +106,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 2. [x] Front- or rear-camera selection
 3. [x] Rear-camera default
 4. [x] Landscape recording mode (`RecordScreen`'s camera preview locks to landscape via `react-native-orientation-locker` while this tab is focused and the camera is ready — PRD 2.4/3.1 — `docs/adr/0013-landscape-recording-mode.md`; build-verified on a real Android emulator AND confirmed working correctly on a real physical iPhone with a real camera — the first camera-facing feature in this app confirmed correct on real hardware)
-5. [ ] 30/60 FPS recording where supported (selector exists in UI; not yet wired to an actual device format/fps)
+5. [x] 30/60 FPS recording where supported (`RecordScreen` now wires the frame-rate selector to `useCameraFormat`, clamping to what the resolved device format actually supports rather than blindly trusting the UI selection — PRD CAM-005's 120→60→30 graceful-degradation priority; the manifest records the actual fps used, and a note tells the user when their selection got clamped; not yet build-verified on real hardware — the physical iPhone tested so far didn't exercise the degradation path)
 6. [x] Video countdown timer
 7. [x] Manual recording start/stop
 8. [ ] Automatic swing-event detection where reliable

@@ -53,6 +53,11 @@ jest.mock('react-native-vision-camera', () => {
   return {
     Camera: MockCamera,
     useCameraDevice: jest.fn(() => undefined),
+    // undefined by default: RecordScreen falls back to the requested
+    // frame rate as-is when no format is resolved (matches its real
+    // behavior when useCameraFormat can't find a match). Tests that need
+    // to exercise format-driven fps clamping override this per-case.
+    useCameraFormat: jest.fn(() => undefined),
   };
 });
 

@@ -8,6 +8,7 @@ import { useIsFocused } from '@react-navigation/native';
 import {
   Camera,
   useCameraDevice,
+  useCameraFormat,
   type CameraDevice,
 } from 'react-native-vision-camera';
 import { mkdir, moveFile, writeFile } from '@dr.pogodin/react-native-fs';
@@ -49,6 +50,7 @@ const mockedCamera = Camera as unknown as {
   mockStopRecording: jest.Mock;
 };
 const mockedUseCameraDevice = useCameraDevice as jest.Mock;
+const mockedUseCameraFormat = useCameraFormat as jest.Mock;
 const mockedMkdir = mkdir as jest.Mock;
 const mockedMoveFile = moveFile as jest.Mock;
 const mockedWriteFile = writeFile as jest.Mock;
@@ -165,6 +167,9 @@ describe('RecordScreen recording flow', () => {
   afterEach(() => {
     jest.useRealTimers();
     jest.clearAllMocks();
+    // clearAllMocks doesn't reset a mockReturnValue override - restore the
+    // module mock's default so a test's override can't leak into the next.
+    mockedUseCameraFormat.mockReturnValue(undefined);
   });
 
   it('counts down, starts recording, and saves the finished video locally', async () => {
@@ -226,6 +231,55 @@ describe('RecordScreen recording flow', () => {
       expect.stringContaining('"handedness": "right"'),
     );
     expect(existsByTestId(tree!, 'save-confirmation')).toBe(true);
+  });
+
+  it("records the manifest's frameRate clamped to what the device format actually supports", async () => {
+    // recordingSetupStore's default frameRate is 60; a format capping out
+    // at 30fps should clamp to it, not silently claim 60 in the manifest -
+    // ReplayScreen's frame-stepping relies on this being accurate.
+    mockedUseCameraFormat.mockReturnValue({ minFps: 1, maxFps: 30 });
+    mockedCamera.mockStartRecording.mockImplementation(
+      (options: { onRecordingFinished: (video: unknown) => void }) => {
+        options.onRecordingFinished({
+          path: '/tmp/mock-video.mov',
+          duration: 4.2,
+          width: 1920,
+          height: 1080,
+        });
+      },
+    );
+
+    let tree: ReactTestRenderer.ReactTestRenderer;
+    act(() => {
+      tree = ReactTestRenderer.create(<RecordScreen />);
+    });
+
+    expect(
+      tree!.root.findByProps({ testID: 'frame-rate-degraded-note' }),
+    ).toBeDefined();
+
+    const [recordButton] = tree!.root.findAllByProps({
+      testID: 'record-button',
+    });
+    act(() => {
+      recordButton!.props.onPress();
+    });
+
+    for (let tick = 0; tick < 3; tick += 1) {
+      await act(async () => {
+        jest.advanceTimersByTime(1000);
+      });
+    }
+
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(mockedWriteFile).toHaveBeenCalledWith(
+      expect.stringContaining('/analysis-manifest.json'),
+      expect.stringContaining('"frameRate": 30'),
+    );
   });
 
   it('stops recording when the Stop button is pressed', async () => {

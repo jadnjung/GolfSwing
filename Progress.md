@@ -627,6 +627,24 @@ Updated `docs/adr/0013-landscape-recording-mode.md` and `Checklist.md` item 4 to
 
 ---
 
+## 2026-08-13 ~16:40 KST — Real device feedback round: History refresh bug, Camera selector placement, frame-rate wiring
+
+Three fixes/features driven directly by the user actually using the app on their iPhone, not by inspection.
+
+**Bug found and fixed**: recording a swing and switching to History didn't show it. `HistoryScreen` only loaded its swing list in a plain mount-only `useEffect` — the exact same bottom-tab-navigator-keeps-screens-mounted issue already hit and fixed for the landscape lock in Step 21 (ADR 0013). Fixed with `useFocusEffect` instead, reloading on every focus. Added a regression test simulating a second focus event and asserting the list actually reloads.
+
+**UX fix**: the front/back camera selector was there all along (built early in the project) but effectively undiscoverable — `RecordScreen` locks to landscape once the camera is ready, and a landscape viewport is short enough that everything below the preview/record button needed scrolling to reach. Moved just the Camera selector above the preview, since it's the one setting worth checking every time before recording.
+
+**Bigger layout change**, also user-requested after seeing the real screen: the camera preview was a fixed 240pt-tall box leaving most of the landscape screen unused, and Record/Stop was a full-width row of its own. Preview height is now computed from `useWindowDimensions()` so it actually dominates the screen; Record/Stop is now a circular button overlaid on the preview itself (right-center) instead of costing its own row.
+
+**MVP item 5 closed**: wired the frame-rate selector to `useCameraFormat` instead of it being UI-only — the resolved device format's `minFps`/`maxFps` clamp the requested rate, the manifest records the *actual* fps used (not the blind selection, since `ReplayScreen`'s frame-stepping depends on this being accurate), and a note tells the user when their selection got clamped. This was explicitly blocked on "needs a real device to verify" until today.
+
+All four validated via `pnpm -r lint/typecheck/test` (81 tests / 14 suites) after each change. The frame-rate clamping itself is code/logic-verified via mocked tests, not yet exercised on the real iPhone (which apparently supports the frame rates tried so far without needing to clamp) — worth deliberately testing an unsupported combination on-device to see the degradation note actually appear.
+
+Also worth remembering for next time: `apps/mobile/ios/GolfSwingMobile.xcodeproj/project.pbxproj` keeps picking up a personal `DEVELOPMENT_TEAM` value locally whenever Xcode manages signing — deliberately left uncommitted each time (see the earlier entry on this), so `git status` showing it modified is expected, not a sign something's wrong.
+
+---
+
 ## Next up
 
 **Read this whole section before starting new work in a fresh session** — it's written to be a complete resumption point, not just a hint.

@@ -12,6 +12,7 @@ import { useIsFocused } from '@react-navigation/native';
 import {
   Camera,
   useCameraDevice,
+  useCameraFormat,
   type CameraPermissionStatus,
   type VideoFile,
 } from 'react-native-vision-camera';
@@ -101,6 +102,23 @@ export function RecordScreen() {
 
   const device = useCameraDevice(cameraPosition);
 
+  // MVP item 5: wires the frame-rate selector to an actual device format,
+  // rather than it being UI-only. `useCameraFormat` picks the closest
+  // format the device actually supports to the requested fps — real device
+  // hardware doesn't necessarily support every option in FRAME_RATES at
+  // every resolution/camera position, so the format returned may not
+  // actually cover the requested rate (e.g. a front camera commonly maxes
+  // out below 120fps). Recording still proceeds at the closest fps the
+  // device can actually do, rather than failing outright — PRD CAM-005's
+  // 120 → 60 → 30 priority order already assumes this kind of graceful
+  // degradation per device.
+  const format = useCameraFormat(device, [{ fps: frameRate }]);
+  const actualFrameRate =
+    format == null
+      ? frameRate
+      : Math.min(format.maxFps, Math.max(format.minFps, frameRate));
+  const frameRateDegraded = actualFrameRate !== frameRate;
+
   // Non-null: RootNavigator only mounts once onboarding has produced a
   // profile (App.tsx), so RecordScreen is never reachable without one.
   const handedness = useProfileStore(state => state.profile!.handedness);
@@ -146,7 +164,10 @@ export function RecordScreen() {
           clubType: club,
           cameraView,
           cameraPosition,
-          frameRate,
+          // The actual fps the device recorded at, not necessarily the
+          // user's requested selection — see actualFrameRate above.
+          // ReplayScreen's frame-stepping relies on this being accurate.
+          frameRate: actualFrameRate,
           durationMs: Math.round(video.duration * 1000),
           analysisStatus: 'pending' as const,
           handedness,
@@ -165,7 +186,7 @@ export function RecordScreen() {
         setCaptureStage('error');
       }
     },
-    [club, cameraView, cameraPosition, frameRate, handedness],
+    [club, cameraView, cameraPosition, actualFrameRate, handedness],
   );
 
   const startRecording = useCallback(() => {
@@ -260,6 +281,8 @@ export function RecordScreen() {
                 ref={cameraRef}
                 style={StyleSheet.absoluteFill}
                 device={device}
+                {...(format != null ? { format } : {})}
+                fps={actualFrameRate}
                 isActive
                 video
                 audio={audioEnabled}
@@ -330,6 +353,12 @@ export function RecordScreen() {
           selected={frameRate}
           onSelect={setFrameRate}
         />
+        {frameRateDegraded ? (
+          <Text style={styles.note} testID="frame-rate-degraded-note">
+            This camera doesn't support {frameRate} FPS — recording at{' '}
+            {actualFrameRate} FPS instead.
+          </Text>
+        ) : null}
 
         <Text style={styles.note}>
           Simultaneous front-and-rear recording isn't offered — it requires
