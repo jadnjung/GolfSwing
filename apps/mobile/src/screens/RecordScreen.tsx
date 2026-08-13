@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useIsFocused } from '@react-navigation/native';
 import {
@@ -63,6 +70,14 @@ export function RecordScreen() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const cameraRef = useRef<Camera>(null);
+
+  // Real-device testing (in landscape, where this preview is shown, ADR
+  // 0013) found the previous fixed-height preview box left most of the
+  // screen unused. Sized relative to the actual window instead, so the
+  // preview genuinely dominates the screen rather than being a small box
+  // among several rows of controls.
+  const { height: windowHeight } = useWindowDimensions();
+  const previewHeight = Math.max(200, windowHeight - 160);
 
   // Bottom-tab navigators keep inactive screens mounted by default, so an
   // always-mounted <OrientationLocker> here would stay locked to landscape
@@ -237,7 +252,10 @@ export function RecordScreen() {
           </Text>
         ) : (
           <>
-            <View style={styles.previewWrapper} testID="camera-preview-wrapper">
+            <View
+              style={[styles.previewWrapper, { height: previewHeight }]}
+              testID="camera-preview-wrapper"
+            >
               <Camera
                 ref={cameraRef}
                 style={StyleSheet.absoluteFill}
@@ -254,30 +272,34 @@ export function RecordScreen() {
                   <Text style={styles.countdownText}>{countdownRemaining}</Text>
                 </View>
               ) : null}
-            </View>
 
-            {captureStage === 'recording' ? (
-              <Pressable
-                style={styles.stopButton}
-                onPress={stopRecording}
-                testID="stop-button"
-              >
-                <Text style={styles.grantButtonText}>Stop</Text>
-              </Pressable>
-            ) : (
-              <Pressable
-                style={styles.grantButton}
-                onPress={beginCountdown}
-                disabled={
-                  captureStage === 'counting' || captureStage === 'saving'
-                }
-                testID="record-button"
-              >
-                <Text style={styles.grantButtonText}>
-                  {captureStage === 'saving' ? 'Saving…' : 'Record'}
-                </Text>
-              </Pressable>
-            )}
+              {/* Circular and overlaid on the preview, not a full-width row
+                  below it — the record button is the one control needed
+                  during recording itself, so it shouldn't cost a whole row
+                  of the screen the preview could otherwise use. */}
+              {captureStage === 'recording' ? (
+                <Pressable
+                  style={[styles.recordCircle, styles.recordCircleActive]}
+                  onPress={stopRecording}
+                  testID="stop-button"
+                >
+                  <View style={styles.stopSquare} />
+                </Pressable>
+              ) : (
+                <Pressable
+                  style={styles.recordCircle}
+                  onPress={beginCountdown}
+                  disabled={
+                    captureStage === 'counting' || captureStage === 'saving'
+                  }
+                  testID="record-button"
+                >
+                  {captureStage === 'saving' ? (
+                    <Text style={styles.recordCircleSavingText}>…</Text>
+                  ) : null}
+                </Pressable>
+              )}
+            </View>
 
             {savedSwingId != null ? (
               <Text style={styles.confirmationText} testID="save-confirmation">
@@ -370,17 +392,40 @@ const styles = StyleSheet.create({
     color: colors.background,
     fontWeight: '600',
   },
-  stopButton: {
-    backgroundColor: '#D14343',
-    paddingVertical: spacing.sm,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
   previewWrapper: {
-    height: 240,
     borderRadius: 8,
     overflow: 'hidden',
     backgroundColor: colors.surface,
+  },
+  // Overlaid on the preview (position: absolute), not a full-width row
+  // below it — see the comment at its usage site.
+  recordCircle: {
+    position: 'absolute',
+    top: '50%',
+    right: spacing.lg,
+    marginTop: -38,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    backgroundColor: colors.primary,
+    borderWidth: 4,
+    borderColor: 'rgba(255, 255, 255, 0.85)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  recordCircleActive: {
+    backgroundColor: '#D14343',
+  },
+  stopSquare: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    backgroundColor: colors.background,
+  },
+  recordCircleSavingText: {
+    color: colors.background,
+    fontWeight: '600',
+    fontSize: 20,
   },
   countdownOverlay: {
     ...StyleSheet.absoluteFillObject,
