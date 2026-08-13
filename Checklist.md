@@ -12,7 +12,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 - [x] Monorepo scaffold, version-pinned toolchain, ADR process (`docs/adr/0001`–`0006`)
 - [x] TypeScript strict config, ESLint, Prettier, EditorConfig
-- [x] Shared UI design system (`apps/mobile/src/theme/theme.ts` — color/spacing/radius/typography tokens; `src/components/{Button,Card,Typography,EmptyState}.tsx`) — replaced three independently-duplicated button implementations and a hardcoded-everywhere danger color; app-wide accessibility labels/roles, CompareScreen A/B labels, RecordScreen's recording indicator, and HistoryScreen thumbnails are all done — a real Home dashboard (deliberately left an honest placeholder) and light mode are the only items left open from the original design review, see Progress.md
+- [x] Shared UI design system (`apps/mobile/src/theme/theme.ts` — color/spacing/radius/typography tokens; `src/components/{Button,Card,Typography,EmptyState,SwingThumbnail}.tsx`) — replaced three independently-duplicated button implementations and a hardcoded-everywhere danger color; app-wide accessibility labels/roles, CompareScreen A/B labels, RecordScreen's recording indicator, HistoryScreen thumbnails, and a real Home dashboard (record CTA + recent-swings preview, typed cross-tab navigation via `RootTabParamList`) are all done — light mode is the only item left open from the original design review, deliberately deferred by the user, see Progress.md
 - [x] CI pipeline: lint, format, typecheck, test, dependency audit, secret scan (`.github/workflows/pr-checks.yml`)
 - [x] Local machine provisioned and verified (`scripts/doctor.sh`)
 - [x] Governance files: LICENSE, SECURITY.md, CONTRIBUTING.md, PR template, Dependabot

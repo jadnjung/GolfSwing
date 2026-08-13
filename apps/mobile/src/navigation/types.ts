@@ -10,3 +10,15 @@ export type HistoryStackParamList = {
   SelectComparisonSwing: { firstSwingId: string };
   Compare: { swingIdA: string; swingIdB: string };
 };
+
+// Param list for the root bottom-tab navigator. None of the five tabs take
+// params today, but naming them here (rather than leaving the navigator
+// untyped) lets HomeScreen's dashboard call navigation.navigate('Record')
+// with actual type-checking instead of an unchecked string.
+export type RootTabParamList = {
+  Home: undefined;
+  Record: undefined;
+  History: undefined;
+  Training: undefined;
+  Settings: undefined;
+};

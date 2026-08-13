@@ -9,6 +9,7 @@ import House from 'lucide-react-native/icons/house';
 import Settings from 'lucide-react-native/icons/settings';
 import Video from 'lucide-react-native/icons/video';
 import { HistoryStackNavigator } from './HistoryStackNavigator';
+import type { RootTabParamList } from './types';
 import { HomeScreen } from '../screens/HomeScreen';
 import { RecordScreen } from '../screens/RecordScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
@@ -16,7 +17,7 @@ import { TrainingScreen } from '../screens/TrainingScreen';
 import { useUiStore, type TabName } from '../state/uiStore';
 import { colors } from '../theme/theme';
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator<RootTabParamList>();
 
 // One `focus` listener per tab, each setting a known literal — reactivity
 // is proven in __tests__/App.test.tsx, reading this store's state directly

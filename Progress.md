@@ -6,6 +6,24 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-13 ~22:30 KST — Real Home dashboard, closing out the UI/UX design review
+
+Closes the last substantial item from the UI/UX design review: `HomeScreen` was an honest placeholder card ("your dashboard will live here"); this replaces it with a real one, done as pure JS/React work while the physical iPhone was disconnected.
+
+Extracted `HistoryScreen`'s locally-defined `SwingThumbnail` component into a shared `src/components/SwingThumbnail.tsx` (now takes a `size` prop, defaulting to 64 to match its original History usage) so HomeScreen could reuse the same thumbnail-with-placeholder-fallback behavior from ADR 0015 rather than re-implementing it. Also extracted `formatDate`/`formatDuration` (previously private to `HistoryScreen`) into `src/utils/formatSwing.ts` for the same reason.
+
+Added a `RootTabParamList` type (`src/navigation/types.ts`) and parameterized the root `createBottomTabNavigator` with it, so `HomeScreen` can call `navigation.navigate('Record')` / `navigation.navigate('History')` with real type-checking instead of an unchecked string — the tab navigator had been left untyped since Step 2.
+
+`HomeScreen` now shows: a "Record a swing" CTA card that jumps straight to the Record tab, and a "Recent swings" preview (up to 5, newest first via `listSwings()`, reusing `SwingThumbnail`) with a "See all" link to History and a real empty state for a first-time user with zero swings — refreshed via `useFocusEffect`, the same bottom-tab-mounted-screen refresh pattern already established in `HistoryScreen`/`RecordScreen`.
+
+Also fixed one small consistency gap while in `HistoryScreen`: its delete-action text still hardcoded `#D14343` instead of the `colors.danger` token added earlier this session.
+
+Added `__tests__/HomeScreen.test.tsx` (empty state, recent-swings list, both navigation actions) mirroring `HistoryScreen.test.tsx`'s patterns; updated the two `App.test.tsx` assertions that referenced the now-removed `home-placeholder-card` testID to check for the new dashboard's `home-record-cta` instead. `lint`/`typecheck`/`test` (93/93) all pass.
+
+Updated `Checklist.md`'s design-system line — the Home dashboard is no longer an open item; light mode remains explicitly deferred, per the user's own scope choice.
+
+---
+
 ## 2026-08-13 ~21:45 KST — Build-verified the whole UI/UX batch on both platforms
 
 The user's iPhone wasn't connected at the time ("unavailable" in `devicectl`), so verified everything possible without it: `pod install` (linked `react-native-create-thumbnail` cleanly) + `xcodebuild` for a real iOS Simulator, and `./gradlew assembleDebug` for a real Android emulator — both succeeded. Installed and launched on both; screenshotted Home, History, Training, and Settings.

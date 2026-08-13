@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   Alert,
   FlatList,
-  Image,
   Modal,
   Pressable,
   StyleSheet,
@@ -12,71 +11,23 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import VideoIcon from 'lucide-react-native/icons/video';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Swing } from '@golf-swing/domain';
 import {
   deleteSwing,
   getSwingSizeBytes,
-  getSwingThumbnail,
   listSwings,
   setSwingTags,
 } from '../data/swingRepository';
 import type { HistoryStackParamList } from '../navigation/types';
-import { colors, radii, spacing } from '../theme/theme';
+import { SwingThumbnail } from '../components/SwingThumbnail';
+import { colors, spacing } from '../theme/theme';
 import { formatBytes } from '../utils/formatBytes';
+import { formatDate, formatDuration } from '../utils/formatSwing';
 
 type Props = NativeStackScreenProps<HistoryStackParamList, 'HistoryList'>;
 
 type LoadState = 'loading' | 'loaded' | 'error';
-
-function formatDuration(durationMs: number): string {
-  return `${(durationMs / 1000).toFixed(1)}s`;
-}
-
-function formatDate(iso: string): string {
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? iso : date.toLocaleString();
-}
-
-// ADR 0015: a swing history is inherently visual (it's video) — pure text
-// rows meant finding "that swing from yesterday" had no visual recall aid
-// at all. Generated/cached per swing (getSwingThumbnail), not blocking:
-// falls back to a placeholder icon while loading or if generation fails,
-// never a broken image or a blank row.
-function SwingThumbnail({ swingId }: { swingId: string }) {
-  const [thumbnailPath, setThumbnailPath] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    getSwingThumbnail(swingId).then(path => {
-      if (!cancelled && path != null) {
-        setThumbnailPath(path);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [swingId]);
-
-  if (thumbnailPath != null) {
-    return (
-      <Image
-        source={{ uri: `file://${thumbnailPath}` }}
-        style={styles.thumbnail}
-        testID="swing-thumbnail"
-      />
-    );
-  }
-  return (
-    <View
-      style={[styles.thumbnail, styles.thumbnailPlaceholder]}
-      testID="swing-thumbnail-placeholder"
-    >
-      <VideoIcon color={colors.textMuted} size={20} />
-    </View>
-  );
-}
 
 function SwingRow({
   swing,
@@ -397,18 +348,6 @@ const styles = StyleSheet.create({
   rowText: {
     flex: 1,
   },
-  thumbnail: {
-    width: 64,
-    height: 64,
-    borderRadius: radii.sm,
-    backgroundColor: colors.surface,
-  },
-  thumbnailPlaceholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
   rowActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -436,7 +375,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   deleteText: {
-    color: '#D14343',
+    color: colors.danger,
     fontSize: 13,
     fontWeight: '600',
   },

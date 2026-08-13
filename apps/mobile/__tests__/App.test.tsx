@@ -43,7 +43,7 @@ describe('App', () => {
     // content here; it was leftover developer instrumentation never meant
     // to be user-facing, removed once that became clear).
     expect(
-      tree!.root.findAllByProps({ testID: 'home-placeholder-card' }).length,
+      tree!.root.findAllByProps({ testID: 'home-record-cta' }).length,
     ).toBeGreaterThan(0);
     expect(useUiStore.getState().activeTab).toBe('Home');
   });
@@ -72,7 +72,7 @@ describe('App', () => {
     });
 
     expect(
-      tree!.root.findAllByProps({ testID: 'home-placeholder-card' }).length,
+      tree!.root.findAllByProps({ testID: 'home-record-cta' }).length,
     ).toBeGreaterThan(0);
     expect(useUiStore.getState().activeTab).toBe('Home');
   });
