@@ -613,6 +613,20 @@ Scoped deliberately to tooling/config only — no React Native app code yet.
 
 ---
 
+## 2026-08-13 ~16:20 KST — First real physical-device test (iPhone, landscape recording mode)
+
+The user connected their personal iPhone ("JJ", iPhone18,1, iOS 26.5.2) to this Mac for the first genuinely physical-device test this project has had. Walked through: `xcrun xctrace list devices`/`devicectl` to confirm the Mac saw the device (paired over what looked like wireless, since `xctrace` showed it offline while `devicectl` showed it available — the two tools use different discovery mechanisms), signing into Xcode with a free Apple ID (Personal Team, no paid account), locating Signing & Capabilities in Xcode's UI (genuinely non-obvious — documented precise navigation steps), and a keychain-access password prompt (clarified "the login keychain" means the Mac's own user password, not the literal word "login"). Xcode auto-generated a real code-signing identity once a team was assigned to the target. Also covered, as general security questions unrelated to any specific bug: risks of trusting a computer, installing a free-signed debug build, and enabling iOS Developer Mode (all standard, low-risk, reversible developer workflow — covered in detail in the conversation, not repeated here) — and confirmed via `find`/`grep` earlier in the session that this app has zero network code, so none of that carries data-exfiltration risk specifically for this app.
+
+**Real result**: the app installed and launched successfully (`org.reactjs.native.example.GolfSwingMobile`, confirmed via `devicectl device info apps`). Landscape recording mode (Step 21, ADR 0013) was confirmed **working correctly on real camera hardware for the first time** — initial confusion (the camera preview appeared tilted) was diagnosed correctly as the user holding the phone in its natural portrait grip while the UI was landscape-locked, not a rotation bug; rotating the phone to physically match resolved it. This is the first camera-facing feature in this app verified correct on real hardware, not just "builds and launches" (previous verification was Android-emulator-only for the actual visual behavior).
+
+**One real, newly-discovered UX gap**, recorded in ADR 0013: nothing in the UI currently tells a first-time user to physically rotate their phone once the landscape lock engages — worth a follow-up "rotate your phone" hint/overlay. Not fixed yet, just identified and documented.
+
+**Also confirmed**: this project's iOS Debug builds for a real device statically embed the JS bundle (`main.jsbundle`, verified present in the built `.app`) rather than requiring Metro at runtime — unlike simulator Debug builds. So the installed app does not need to stay connected to this Mac, on the same Wi-Fi, or have Metro running to keep working; only reconnecting for a new build or once the 7-day free-signing certificate expires.
+
+Updated `docs/adr/0013-landscape-recording-mode.md` and `Checklist.md` item 4 to record this real-device confirmation.
+
+---
+
 ## Next up
 
 **Read this whole section before starting new work in a fresh session** — it's written to be a complete resumption point, not just a hint.
