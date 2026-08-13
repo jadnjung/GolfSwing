@@ -12,7 +12,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 - [x] Monorepo scaffold, version-pinned toolchain, ADR process (`docs/adr/0001`–`0006`)
 - [x] TypeScript strict config, ESLint, Prettier, EditorConfig
-- [x] Shared UI design system (`apps/mobile/src/theme/theme.ts` — color/spacing/radius/typography tokens; `src/components/{Button,Card,Typography,EmptyState,SwingThumbnail}.tsx`) — replaced three independently-duplicated button implementations and a hardcoded-everywhere danger color; app-wide accessibility labels/roles, CompareScreen A/B labels, RecordScreen's recording indicator, HistoryScreen thumbnails, and a real Home dashboard (record CTA + recent-swings preview, typed cross-tab navigation via `RootTabParamList`) are all done — light mode is the only item left open from the original design review, deliberately deferred by the user, see Progress.md
+- [x] Shared UI design system (`apps/mobile/src/theme/theme.ts` — color/spacing/radius/typography tokens; `src/components/{Button,Card,Typography,EmptyState,SwingThumbnail}.tsx`) — replaced three independently-duplicated button implementations and a hardcoded-everywhere danger color; app-wide accessibility labels/roles, CompareScreen A/B labels, RecordScreen's recording indicator, HistoryScreen thumbnails, and a real Home dashboard (record CTA + recent-swings preview, typed cross-tab navigation via `RootTabParamList`) are all done — light mode was the original design review's only other open item; the user has said explicitly they don't want it, so it's out of scope rather than deferred, see Progress.md
 - [x] CI pipeline: lint, format, typecheck, test, dependency audit, secret scan (`.github/workflows/pr-checks.yml`)
 - [x] Local machine provisioned and verified (`scripts/doctor.sh`)
 - [x] Governance files: LICENSE, SECURITY.md, CONTRIBUTING.md, PR template, Dependabot
@@ -110,7 +110,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 5. [x] 30/60 FPS recording where supported (`RecordScreen` now wires the frame-rate selector to `useCameraFormat`, clamping to what the resolved device format actually supports rather than blindly trusting the UI selection — PRD CAM-005's 120→60→30 graceful-degradation priority; the manifest records the actual fps used, and a note tells the user when their selection got clamped; not yet build-verified on real hardware — the physical iPhone tested so far didn't exercise the degradation path)
 6. [x] Video countdown timer
 7. [x] Manual recording start/stop
-8. [ ] Automatic swing-event detection where reliable
+8. [ ] Automatic swing-event detection where reliable (`docs/architecture/swing-event-detection-feasibility.md` assesses this independently of Phase 2's blocked pose pipeline — recommends motion-energy frame-differencing; the segmentation algorithm itself is implemented and unit-tested against synthetic data, `packages/analysis-engine`'s `detectActiveSwingSegment` — still needs a real per-frame motion-energy signal from actual video and real-footage validation before it's trustworthy, neither of which this environment can produce)
 9. [ ] On-device human-pose detection
 10. [ ] Pose skeleton overlay
 11. [ ] Joint-angle calculations

@@ -6,6 +6,20 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-13 ~23:10 KST — Swing-event detection feasibility report + segmentation algorithm
+
+User asked to skip light mode entirely (not just defer it — a firm "I don't want light mode"), so that's removed from the open-items list rather than left flagged for later. Picked up MVP item 8 next: "Automatic swing-event detection where reliable" — the app auto-catching swing start/end to trim recordings, which is also exactly what the user asked for earlier this session for comparison-video alignment. It's been sitting completely unstarted.
+
+Wrote `docs/architecture/swing-event-detection-feasibility.md`, in the same desk-research style as `ball-tracking-feasibility.md`: the key finding is that this is a **separate problem from PRD 5.4's full phase-detection model**, not a trivial subset of it — PRD 4.2 places segment-detection/trim at steps 7-8, *before* the heavier processing step, while 5.4's phase model is built entirely on pose-landmark data (wrist velocity, hand direction, shoulder/hip rotation) that doesn't exist yet and won't until ADR 0014's still-unresolved pose-inference benchmarking. Assessed four approaches: motion-energy frame-differencing on the video (recommended, unvalidated), device motion sensors (rejected — this app expects tripod-mounted recording, not handheld), audio impact-spike detection (future refinement, not standalone), and waiting for Phase 2 pose data (rejected as the near-term plan — correct long-term signal, but needlessly couples an independently-shippable feature to the still-blocked native pose decision).
+
+Per the report's own recommendation — prototype the algorithm and unit-test it against synthetic input, don't guess at real accuracy without footage — implemented `packages/analysis-engine`'s `detectActiveSwingSegment`: takes a per-frame motion-energy time series, establishes a baseline from the clip's leading (address-period) frames, thresholds by standard deviations above that baseline, and finds where motion exceeds it (swing start) and later settles back down for a configurable run of frames (swing end), with padding on both sides. Deliberately takes a plain `number[]`, not raw video frames — decoding real frames and computing per-frame motion magnitude is a separate native-video concern for whatever calls into this from `apps/mobile`, not implemented here. 21/21 tests pass (including edge cases: empty input, no motion ever detected, padding clamped to clip bounds, motion that never settles by the end of the clip).
+
+**Honest gap, stated in the report itself**: no claim about real-world accuracy, false-positive rate from background motion, or how this holds up outdoors is backed by measurement — this environment has no camera and no recorded golf swings. Producing the actual motion-energy signal from real video frames, and validating detection against real footage, both still need the physical device.
+
+Updated `Checklist.md` item 8 and this entry; `pnpm typecheck` (all 4 packages), analysis-engine's own lint/test, and prettier all pass.
+
+---
+
 ## 2026-08-13 ~22:30 KST — Real Home dashboard, closing out the UI/UX design review
 
 Closes the last substantial item from the UI/UX design review: `HomeScreen` was an honest placeholder card ("your dashboard will live here"); this replaces it with a real one, done as pure JS/React work while the physical iPhone was disconnected.
