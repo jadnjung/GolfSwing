@@ -202,6 +202,20 @@ export function RecordScreen() {
       <ScrollView contentContainerStyle={styles.content} testID="record-screen">
         <Text style={styles.title}>Record</Text>
 
+        {/* Deliberately placed above the preview, not with the other
+            selectors below: this is the one setting worth checking before
+            recording every time, and the screen locks to landscape once the
+            camera is ready (docs/adr/0013) — a landscape viewport is short
+            enough that anything below the preview/record button needs
+            scrolling to reach, which real-device testing showed made this
+            easy to miss. */}
+        <OptionRow
+          label="Camera"
+          options={['back', 'front'] as CameraPosition[]}
+          selected={cameraPosition}
+          onSelect={setCameraPosition}
+        />
+
         {!hasCameraAccess ? (
           <View style={styles.permissionGate}>
             <Text style={styles.permissionText}>
@@ -287,12 +301,6 @@ export function RecordScreen() {
           options={CAMERA_VIEWS}
           selected={cameraView}
           onSelect={setCameraView}
-        />
-        <OptionRow
-          label="Camera"
-          options={['back', 'front'] as CameraPosition[]}
-          selected={cameraPosition}
-          onSelect={setCameraPosition}
         />
         <OptionRow
           label="Frame rate"
