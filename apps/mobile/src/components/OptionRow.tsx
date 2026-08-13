@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, spacing } from '../theme/theme';
+import { colors, radii, spacing, typography } from '../theme/theme';
 
 // Extracted from RecordScreen (Step 4) when OnboardingScreen (Step 10)
 // needed the same labeled-choice-row control — same bar as any other
@@ -49,18 +49,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  rowLabel: {
-    color: colors.text,
-    fontSize: 14,
-  },
+  rowLabel: typography.body,
   optionGroup: {
     flexDirection: 'row',
     gap: spacing.sm,
   },
   option: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.sm,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -68,10 +65,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  optionText: {
-    color: colors.textMuted,
-    fontSize: 12,
-  },
+  optionText: typography.caption,
   optionTextSelected: {
     color: colors.background,
     fontWeight: '600',

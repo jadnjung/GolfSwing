@@ -12,6 +12,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 
 - [x] Monorepo scaffold, version-pinned toolchain, ADR process (`docs/adr/0001`–`0006`)
 - [x] TypeScript strict config, ESLint, Prettier, EditorConfig
+- [x] Shared UI design system (`apps/mobile/src/theme/theme.ts` — color/spacing/radius/typography tokens; `src/components/{Button,Card,Typography,EmptyState}.tsx`) — replaced three independently-duplicated button implementations and a hardcoded-everywhere danger color; full screen-by-screen visual/UX pass beyond the two Critical bugs already fixed (debug text shown to users, dev-note copy on RecordScreen) is deliberately deferred, see Progress.md
 - [x] CI pipeline: lint, format, typecheck, test, dependency audit, secret scan (`.github/workflows/pr-checks.yml`)
 - [x] Local machine provisioned and verified (`scripts/doctor.sh`)
 - [x] Governance files: LICENSE, SECURITY.md, CONTRIBUTING.md, PR template, Dependabot

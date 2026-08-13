@@ -3,20 +3,9 @@
  */
 
 import ReactTestRenderer, { act } from 'react-test-renderer';
-import { Text } from 'react-native';
 import { App } from '../src/app/App';
 import { useProfileStore } from '../src/state/profileStore';
-
-function renderedText(tree: ReactTestRenderer.ReactTestRenderer): string {
-  return tree.root
-    .findAllByType(Text)
-    .map(node =>
-      Array.isArray(node.props.children)
-        ? node.props.children.join('')
-        : node.props.children,
-    )
-    .join(' | ');
-}
+import { useUiStore } from '../src/state/uiStore';
 
 describe('App', () => {
   let tree: ReactTestRenderer.ReactTestRenderer | undefined;
@@ -48,11 +37,15 @@ describe('App', () => {
     });
 
     // Proves the navigator actually mounted the Home screen (not a blank
-    // shell) and that the Zustand store reflects it via ActiveTabBanner —
-    // not just that *something* rendered without crashing. JSX children are
-    // separate array entries ("Active tab: ", "Home"), so join per-Text-node
-    // rather than substring-matching the raw render tree.
-    expect(renderedText(tree!)).toContain('Active tab: Home');
+    // shell) — not just that *something* rendered without crashing — and
+    // that the Zustand tab-tracking store reflects it, read directly rather
+    // than via a rendered debug string (that string used to be real UI
+    // content here; it was leftover developer instrumentation never meant
+    // to be user-facing, removed once that became clear).
+    expect(
+      tree!.root.findAllByProps({ testID: 'home-placeholder-card' }).length,
+    ).toBeGreaterThan(0);
+    expect(useUiStore.getState().activeTab).toBe('Home');
   });
 
   test('shows onboarding before a profile exists, and the tab shell after completing it', async () => {
@@ -78,6 +71,9 @@ describe('App', () => {
       tree!.root.findByProps({ testID: 'profile-save-button' }).props.onPress();
     });
 
-    expect(renderedText(tree!)).toContain('Active tab: Home');
+    expect(
+      tree!.root.findAllByProps({ testID: 'home-placeholder-card' }).length,
+    ).toBeGreaterThan(0);
+    expect(useUiStore.getState().activeTab).toBe('Home');
   });
 });

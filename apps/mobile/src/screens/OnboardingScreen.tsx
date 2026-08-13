@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Check from 'lucide-react-native/icons/check';
 import type { Handedness, SkillLevel, Units } from '@golf-swing/domain';
+import { Button } from '../components/Button';
 import { OptionRow } from '../components/OptionRow';
+import { Body, Title } from '../components/Typography';
 import { useProfileStore } from '../state/profileStore';
 import { colors, spacing } from '../theme/theme';
 import type { ClubType } from '../state/recordingSetupStore';
@@ -12,7 +15,22 @@ const SKILL_LEVELS: SkillLevel[] = ['beginner', 'intermediate', 'advanced'];
 const CLUBS: ClubType[] = ['driver', 'iron', 'wedge', 'putter'];
 const UNITS_OPTIONS: Units[] = ['imperial', 'metric'];
 
+const PRIVACY_GUARANTEES = [
+  'Recordings, pose data, and analysis stay on this phone',
+  'No account required',
+  'Delete any swing — or everything — anytime from Settings',
+];
+
 type Step = 'privacy' | 'profile';
+
+function GuaranteeRow({ text }: { text: string }) {
+  return (
+    <View style={styles.guaranteeRow}>
+      <Check color={colors.primary} size={18} />
+      <Body style={styles.guaranteeText}>{text}</Body>
+    </View>
+  );
+}
 
 // PRD section 4.1 (First Launch): privacy notice, then handedness/skill
 // level/club/units, before recording is available. App.tsx renders this
@@ -29,20 +47,21 @@ export function OnboardingScreen() {
   if (step === 'privacy') {
     return (
       <SafeAreaView style={styles.container} testID="onboarding-privacy">
-        <Text style={styles.title}>Your swings stay on this device</Text>
-        <Text style={styles.body}>
-          Recordings, pose data, and analysis are stored only on this phone.
-          Nothing is uploaded automatically, and there's no account required.
-          You can delete any swing, or all of your data, at any time from
-          Settings.
-        </Text>
-        <Pressable
-          style={styles.primaryButton}
+        <Title style={styles.title}>Your swings stay on this device</Title>
+        {/* Broken into distinct, scannable guarantees rather than one dense
+            paragraph — this is the app's #1 trust proposition (PRD 9.1),
+            worth more visual weight than a wall of body text. */}
+        <View style={styles.guaranteeList}>
+          {PRIVACY_GUARANTEES.map(text => (
+            <GuaranteeRow key={text} text={text} />
+          ))}
+        </View>
+        <Button
+          label="Got it — let's go"
           onPress={() => setStep('profile')}
           testID="privacy-accept-button"
-        >
-          <Text style={styles.primaryButtonText}>I understand</Text>
-        </Pressable>
+          style={styles.primaryButton}
+        />
       </SafeAreaView>
     );
   }
@@ -53,11 +72,11 @@ export function OnboardingScreen() {
         contentContainerStyle={styles.content}
         testID="onboarding-profile"
       >
-        <Text style={styles.title}>Set up your profile</Text>
-        <Text style={styles.body}>
+        <Title style={styles.title}>Set up your profile</Title>
+        <Body style={styles.body}>
           This helps tailor feedback to you — you can change it later in
           Settings.
-        </Text>
+        </Body>
 
         <OptionRow
           label="Handedness"
@@ -84,8 +103,8 @@ export function OnboardingScreen() {
           onSelect={setUnits}
         />
 
-        <Pressable
-          style={styles.primaryButton}
+        <Button
+          label="Get started"
           onPress={() =>
             save({
               handedness,
@@ -96,9 +115,8 @@ export function OnboardingScreen() {
             })
           }
           testID="profile-save-button"
-        >
-          <Text style={styles.primaryButtonText}>Get started</Text>
-        </Pressable>
+          style={styles.primaryButton}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -114,25 +132,23 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   title: {
-    color: colors.text,
-    fontSize: 22,
-    fontWeight: '600',
-    marginBottom: spacing.md,
-  },
-  body: {
-    color: colors.textMuted,
-    fontSize: 14,
     marginBottom: spacing.lg,
   },
-  primaryButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.sm,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginTop: spacing.md,
+  body: {
+    marginBottom: spacing.lg,
   },
-  primaryButtonText: {
-    color: colors.background,
-    fontWeight: '600',
+  guaranteeList: {
+    gap: spacing.md,
+  },
+  guaranteeRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
+  guaranteeText: {
+    flex: 1,
+  },
+  primaryButton: {
+    marginTop: spacing.lg,
   },
 });

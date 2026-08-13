@@ -6,6 +6,24 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-13 ~17:15 KST — UI/UX design review, design-system foundation, two Critical fixes
+
+The user asked for a full UI/UX design review of the app (framed as "act as a senior mobile designer") — read every screen's actual code plus the design tokens before writing anything, then delivered a screen-by-screen critique with Critical/High/Medium/Low priority tags, following the framework the user specified. Full findings summarized in-conversation, not duplicated here; the headline ones drove this entry's work.
+
+**User chose "Foundation first"**: build the shared design system and fix the two Critical *bugs* (not just polish items) now; defer everything else (thumbnails in History, CompareScreen labels, HomeScreen's real dashboard content, light mode, etc.) as explicitly separate follow-up work. Also explicitly deferred: addressing the dark-mode-only critique (a real open question — this app's primary use case, PRD 2.5's driving-range setting, is often bright daylight, where a near-black UI can be genuinely harder to read — but a big enough structural change to deserve its own deliberate pass, not folding into a token expansion).
+
+**Design system built** (`apps/mobile/src/theme/theme.ts`, `apps/mobile/src/components/`): expanded from 6 colors/3 spacing steps with no typography scale and three independently-duplicated "primary button" implementations, to a real token set (colors incl. semantic `danger`/`overlay`, a 5-step spacing scale, a border-radius scale, a named typography scale) plus shared `Button`, `Card`, `Typography` (Title/Heading/Body/BodyStrong/Caption/Label), and `EmptyState` components. `OptionRow` (already shared, used everywhere) and `OnboardingScreen` were refactored onto the new tokens/components as part of establishing the foundation, not a full per-screen pass.
+
+**Critical bug 1 fixed — debug text shipped to real users**: `HomeScreen`, `TrainingScreen`, and `SettingsScreen` were rendering `ActiveTabBanner`, a literal "Active tab: Home" string — leftover developer instrumentation (originally built to prove the Zustand tab-tracking store wired up end-to-end) that was never meant to be user-facing. Removed from all three screens; `ActiveTabBanner.tsx` and the now-fully-unused `ScreenContainer.tsx` deleted. Home/Training now show an honest "this is coming, here's what'll live here" placeholder via the new `Card`/`Typography` components — not a fake dashboard, a real deferred-work-is-honestly-labeled state. `__tests__/App.test.tsx`'s reactivity proof (that switching tabs actually updates the store) now reads `useUiStore.getState()` directly instead of depending on rendered debug text — decouples "the store works" from "what's shown on screen," which is exactly what had gotten conflated originally.
+
+**Critical bug 2 fixed — developer reasoning shown as user-facing copy**: `RecordScreen`'s note under the frame-rate selector read *"Simultaneous front-and-rear recording isn't offered — it requires checking the device's actual concurrent-camera capability, which needs a real device to verify"* verbatim — that's ADR/commit-message language, not product copy. Rewritten to "Recording both cameras at once isn't available yet." The real reasoning stays in code comments and `docs/qa/device-matrix.md`, where it belongs.
+
+**Also improved while touching OnboardingScreen for the Button consolidation**: the privacy screen's trust proposition (PRD 9.1, the app's #1 differentiator) was one dense paragraph; broken into three distinct, scannable guarantee rows with a check icon each, rather than a wall of text — a Medium-priority finding from the review, low-risk enough to fold in here rather than deferring.
+
+**Validated**: `pnpm --filter mobile lint/typecheck/test` — 81 tests / 14 suites, all passing (only `App.test.tsx` needed changes, both call sites already only depended on testIDs, not rendered text/styles, everywhere else).
+
+---
+
 ## 2026-08-03 23:00 KST — Professional benchmark reference data (`packages/analysis-engine`)
 
 Followed up on the professional-swing-comparison research (previous entry) by implementing the part that's fully specified and native-independent right now — same pattern ADR 0009 used for `calculateJointAngleDegrees` before a pose-inference library existed to feed it real data.

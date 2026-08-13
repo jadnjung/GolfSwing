@@ -360,10 +360,12 @@ export function RecordScreen() {
           </Text>
         ) : null}
 
+        {/* Real reasoning for not offering this yet — checking the
+            device's actual concurrent-camera capability — belongs in
+            docs/qa/device-matrix.md and code comments, not in user-facing
+            copy. This is what a real user actually needs to know. */}
         <Text style={styles.note}>
-          Simultaneous front-and-rear recording isn't offered — it requires
-          checking the device's actual concurrent-camera capability, which needs
-          a real device to verify.
+          Recording both cameras at once isn't available yet.
         </Text>
 
         <View style={styles.row}>

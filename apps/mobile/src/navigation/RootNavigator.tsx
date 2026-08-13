@@ -19,8 +19,8 @@ import { colors } from '../theme/theme';
 const Tab = createBottomTabNavigator();
 
 // One `focus` listener per tab, each setting a known literal — reactivity
-// is proven by ActiveTabBanner (rendered on every screen) reading this same
-// store value back out.
+// is proven in __tests__/App.test.tsx, reading this store's state directly
+// after simulating a tab focus, rather than via any rendered UI.
 function onFocus(tab: TabName) {
   return () => useUiStore.getState().setActiveTab(tab);
 }

@@ -1,13 +1,14 @@
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text } from 'react-native';
-import { ActiveTabBanner } from '../components/ActiveTabBanner';
-import { ScreenContainer } from '../components/ScreenContainer';
+import { Alert, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button } from '../components/Button';
+import { Title } from '../components/Typography';
 import {
   deleteAllSwings,
   getTotalSwingsSizeBytes,
 } from '../data/swingRepository';
 import { useProfileStore } from '../state/profileStore';
-import { spacing } from '../theme/theme';
+import { colors, spacing } from '../theme/theme';
 import { formatBytes } from '../utils/formatBytes';
 
 // PRD 9.8: "delete-all-data control" — distinct from per-swing deletion
@@ -48,33 +49,29 @@ export function SettingsScreen() {
   }, [clearProfile]);
 
   return (
-    <ScreenContainer title="Settings">
-      <ActiveTabBanner />
-      <Pressable
-        style={styles.deleteAllButton}
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <Title>Settings</Title>
+      <Button
+        label={isDeleting ? 'Deleting…' : 'Delete all data'}
+        variant="danger"
         onPress={confirmDeleteAllData}
         disabled={isDeleting}
         testID="delete-all-data-button"
-      >
-        <Text style={styles.deleteAllButtonText}>
-          {isDeleting ? 'Deleting…' : 'Delete all data'}
-        </Text>
-      </Pressable>
-    </ScreenContainer>
+        style={styles.deleteAllButton}
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
   deleteAllButton: {
     marginTop: spacing.lg,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#D14343',
-  },
-  deleteAllButtonText: {
-    color: '#D14343',
-    fontWeight: '600',
+    alignSelf: 'flex-start',
   },
 });
