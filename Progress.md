@@ -6,6 +6,16 @@ Entries before 2026-08-02 22:40 KST were backfilled with timestamps from `git lo
 
 ---
 
+## 2026-08-14 ~00:10 KST — Standardized `validate` script
+
+User asked for a consistent `pnpm lint && pnpm typecheck && pnpm test` entry point across the two workspaces that actually have their own toolchains — root (aggregates `lint`/`typecheck`/`test` across every package via `pnpm -r --if-present run <script>`) and `apps/mobile` (its own Jest/ESLint/tsc, run separately from root's flat-config ESLint per the ESLint-8.57-upward-search issue from earlier this session). Both already had `lint`/`typecheck`/`test`; added a `validate` script to each that chains them, matching the exact composition asked for.
+
+Didn't touch the three small `packages/*` (`domain`, `analysis-engine`, `tooling-smoke-test`) — they don't have their own `lint` script (covered by root's single `eslint .` flat-config run instead), so a per-package `validate` there would either be inconsistent with the requested shape or need adding a redundant lint step. Root's own `validate` already covers them via its existing recursive `typecheck`/`test`.
+
+Didn't change `.github/workflows/pr-checks.yml` — it deliberately runs lint/format/typecheck/test as separate named steps for per-step failure attribution in the GitHub Actions UI; collapsing that into one `validate` step would lose that. `validate` is a local/pre-commit convenience, not a CI change.
+
+Verified both actually work end-to-end: `pnpm validate` at the root (99+ tests across all packages) and `pnpm --filter mobile validate` standalone, both pass.
+
 ## 2026-08-14 KST — Split `docs/PRD.md` into `Project.md`/`Architecture.md`/`Decisions.md`/`Roadmap.md`
 
 Found in a half-finished state: an uncommitted `CLAUDE.md` rewrite already told the agent to consult `PROJECT.md`/`ARCHITECTURE.md`/`DECISIONS.md`/`ROADMAP.md` (all-caps), and an uncommitted `Project.md` already existed as an exact copy of the old `docs/PRD.md` (2,396 lines, byte-identical), but `Architecture.md`/`Decisions.md`/`Roadmap.md` were empty 0-line stubs, `docs/PRD.md` was staged as deleted, and `Progress.md`/`Checklist.md` (this repo's actual, already-committed tracking files) still pointed at `docs/PRD.md` by name — and use Title Case, not all-caps, which is the real established convention here.

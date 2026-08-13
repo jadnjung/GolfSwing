@@ -21,6 +21,7 @@ Status-at-a-glance for what's done, in progress, and not started, for anyone joi
 - [x] Xcode installed (26.6)
 - [x] Android Studio + JDK 17 installed (JDK 17 via a local Temurin tarball, no `sudo` — see `docs/adr/0010-real-build-verification.md`)
 - [x] `docs/PRD.md` split into `Project.md`/`Architecture.md`/`Decisions.md`/`Roadmap.md` per `CLAUDE.md`'s "Project Documentation" convention (Title Case filenames, matching this repo's existing `Progress.md`/`Checklist.md` convention); fixed `CLAUDE.md`'s own all-caps filename references (`PROJECT.md`→`Project.md`, etc., plus the pre-existing `PROGRESS.md`/`CHECKLIST.md` mismatch) and updated every live cross-reference to the old `docs/PRD.md` path (`README.md`, `SECURITY.md`, `Checklist.md`, `Progress.md`, `docs/architecture/*.md`, `docs/qa/device-matrix.md`)
+- [x] Standardized `validate` script (root `package.json` and `apps/mobile/package.json` — `pnpm lint && pnpm typecheck && pnpm test` in each) so a single `pnpm validate` runs the full check sequence before committing; CI's own step-by-step lint/format/typecheck/test breakdown in `.github/workflows/pr-checks.yml` is left as-is for per-step failure attribution
 
 ## Phase 0: Product and Technical Discovery (PRD 16)
 
